@@ -63,6 +63,17 @@ db.exec(`
     FOREIGN KEY (student_id) REFERENCES users(id),
     UNIQUE (session_id, student_id)
   );
+
+  CREATE TABLE IF NOT EXISTS notifications (
+    id         INTEGER PRIMARY KEY,
+    student_id INTEGER NOT NULL,
+    module_id  INTEGER NOT NULL,
+    level      TEXT NOT NULL,
+    message    TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (student_id) REFERENCES users(id),
+    FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
+  );
 `);
 
 export default db;

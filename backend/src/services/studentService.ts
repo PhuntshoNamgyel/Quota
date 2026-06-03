@@ -1,6 +1,7 @@
 // src/services/studentService.ts
 import { enrolmentRepository } from '../repositories/EnrolmentRepository';
 import { attendanceRepository } from '../repositories/AttendanceRepository';
+import { notificationRepository } from '../repositories/NotificationRepository';
 import { quotaService } from './quotaService';
 
 export const studentService = {
@@ -15,7 +16,12 @@ export const studentService = {
   // FR20: session-by-session history for one of the student's own modules.
   getHistory(studentId: number, moduleId: number) {
     const enrolled = enrolmentRepository.findModulesByStudent(studentId).some((m) => m.id === moduleId);
-    if (!enrolled) throw new Error('Module not found'); // also prevents viewing other modules (NFR03)
+    if (!enrolled) throw new Error('Module not found'); // also blocks viewing other modules (NFR03)
     return attendanceRepository.studentModuleHistory(moduleId, studentId);
+  },
+
+  // FR21/FR22/FR22b: the student's threshold notifications, newest first.
+  getNotifications(studentId: number) {
+    return notificationRepository.findByStudent(studentId);
   },
 };

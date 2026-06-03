@@ -45,3 +45,12 @@ export interface AttendanceRecord {
   student_id: number;
   status: AttendanceStatus;
 }
+
+export interface Notification {
+  id: number;
+  student_id: number;
+  module_id: number;
+  level: string;
+  message: string;
+  created_at: string;
+}

@@ -4,6 +4,7 @@ import { Router } from 'express';
 import { moduleController } from '../controllers/moduleController';
 import { attendanceController } from '../controllers/attendanceController';
 import { authenticate, authorize } from '../middleware/auth';
+import { reportController } from '../controllers/reportController';
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.get('/:id/students', moduleController.students);
 router.get('/:id/roster', attendanceController.roster);        // FR07 + FR09
 router.post('/:id/sessions', attendanceController.submit);     // FR11
 router.get('/:id/sessions', attendanceController.listSessions);
+router.get('/:id/report', reportController.moduleReport); // FR23 + FR24
 
 export default router;

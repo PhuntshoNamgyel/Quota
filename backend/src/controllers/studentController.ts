@@ -14,4 +14,8 @@ export const studentController = {
       res.status(404).json({ error: (err as Error).message });
     }
   },
+
+  notifications(req: Request, res: Response): void {
+    res.json(studentService.getNotifications(req.user!.userId));
+  },
 };
