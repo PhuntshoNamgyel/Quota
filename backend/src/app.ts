@@ -4,6 +4,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import moduleRoutes from './routes/moduleRoutes';
+import sessionRoutes from './routes/sessionRoutes';
 
 const app = express();
 
@@ -16,5 +17,6 @@ app.get('/api/health', (req: Request, res: Response) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/modules', moduleRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 export default app;
