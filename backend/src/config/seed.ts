@@ -61,7 +61,7 @@ const MODULES = [
     { day: 'Tuesday', start: '09:00', end: '10:00' },
     { day: 'Thursday', start: '10:15', end: '12:15' },
   ]},
-  { name: 'DSO101 Continuous Integration & Deployment', slots: [
+  { name: 'DSO101 Continuous Integration & Continuous Deployment', slots: [
     { day: 'Monday', start: '09:00', end: '11:15' },
     { day: 'Thursday', start: '1:15', end: '3:15'},
   ]},

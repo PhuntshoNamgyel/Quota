@@ -1,5 +1,6 @@
 // src/navigation/RootNavigator.tsx
 import React from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
@@ -24,7 +25,16 @@ const screenOptions = {
 };
 
 export default function RootNavigator() {
-  const { user } = useAuth();
+  const { user, restoring } = useAuth();
+
+  // While we check storage for a saved session, show a spinner instead of flashing the login screen.
+  if (restoring) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
