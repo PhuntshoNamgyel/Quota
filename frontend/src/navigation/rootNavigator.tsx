@@ -12,6 +12,8 @@ import ModuleDetailScreen from '../screens/lecturer/ModuleDetailScreen';
 import MarkAttendanceScreen from '../screens/lecturer/MarkAttendanceScreen';
 import ReportsScreen from '../screens/lecturer/ReportsScreen';
 import StudentDashboardScreen from '../screens/student/StudentDashboardScreen';
+import StudentHistoryScreen from '../screens/student/StudentHistoryScreen';
+import StudentNotificationsScreen from '../screens/student/StudentNotificationsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParams>();
 
@@ -38,7 +40,11 @@ export default function RootNavigator() {
             <Stack.Screen name="Reports" component={ReportsScreen} />
           </>
         ) : (
-          <Stack.Screen name="StudentDashboard" component={StudentDashboardScreen} options={{ title: 'My Attendance' }} />
+          <>
+            <Stack.Screen name="StudentDashboard" component={StudentDashboardScreen} options={{ title: 'My Attendance' }} />
+            <Stack.Screen name="StudentHistory" component={StudentHistoryScreen} />
+            <Stack.Screen name="StudentNotifications" component={StudentNotificationsScreen} options={{ title: 'Alerts' }} />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>

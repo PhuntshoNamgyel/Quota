@@ -7,4 +7,6 @@ export type RootStackParams = {
   MarkAttendance: { moduleId: number; moduleName: string; sessionId?: number };
   Reports: { moduleId: number; moduleName: string };
   StudentDashboard: undefined;
+  StudentHistory: { moduleId: number; moduleName: string };
+  StudentNotifications: undefined;
 };
