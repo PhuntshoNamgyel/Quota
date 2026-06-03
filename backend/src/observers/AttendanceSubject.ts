@@ -4,6 +4,7 @@ export interface QuotaEvent {
   moduleId: number;
   percentage: number;
   status: string;
+  remainingAbsences: number; // how many more classes they can miss before dropping below 90%
 }
 
 export interface AttendanceObserver {

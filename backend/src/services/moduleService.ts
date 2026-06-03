@@ -19,6 +19,7 @@ export const moduleService = {
     return moduleRepository.findByLecturer(lecturerId).map((m) => ({
       ...m,
       schedule: scheduleRepository.findByModule(m.id),
+      studentCount: enrolmentRepository.findStudentsByModule(m.id).length, // for the card
     }));
   },
 

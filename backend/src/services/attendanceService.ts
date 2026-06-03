@@ -16,11 +16,13 @@ function publicStudent(u: User) {
 function fireQuotaEvents(moduleId: number, enrolled: User[]) {
   for (const s of enrolled) {
     const q = quotaService.calculate(moduleId, s.id);
-    attendanceSubject.notify({ studentId: s.id, moduleId, percentage: q.percentage, status: q.status });
+    attendanceSubject.notify({
+      studentId: s.id, moduleId, percentage: q.percentage, status: q.status,
+      remainingAbsences: q.remainingAbsences,
+    });
   }
 }
 
-// Builds present/absent records for every enrolled student (absentees come from the request).
 function buildRecords(sessionId: number, enrolled: User[], absentStudentIds: number[]) {
   const absent = new Set(absentStudentIds);
   return enrolled.map((s) => ({
@@ -31,7 +33,6 @@ function buildRecords(sessionId: number, enrolled: User[], absentStudentIds: num
 }
 
 export const attendanceService = {
-  // FR07 + FR09: enrolled students for a new session, all defaulting to Present.
   getRoster(lecturerId: number, moduleId: number) {
     moduleService.assertOwned(lecturerId, moduleId);
     return enrolmentRepository.findStudentsByModule(moduleId).map((s) => ({
@@ -40,28 +41,25 @@ export const attendanceService = {
     }));
   },
 
-  // FR11: create a timestamped session and save records (present for all except absentees).
   submitSession(lecturerId: number, moduleId: number, date: string, absentStudentIds: number[]) {
     moduleService.assertOwned(lecturerId, moduleId);
     const session = sessionRepository.create(moduleId, date);
     const enrolled = enrolmentRepository.findStudentsByModule(moduleId);
     attendanceRepository.saveMany(buildRecords(session.id, enrolled, absentStudentIds));
-    fireQuotaEvents(moduleId, enrolled); // <-- added: notify observers
+    fireQuotaEvents(moduleId, enrolled);
     return { session, records: attendanceRepository.findBySession(session.id) };
   },
 
-  // FR12: edit an existing session's attendance.
   editSession(lecturerId: number, sessionId: number, absentStudentIds: number[]) {
     const session = sessionRepository.findById(sessionId);
     if (!session) throw new Error('Session not found');
     moduleService.assertOwned(lecturerId, session.module_id);
     const enrolled = enrolmentRepository.findStudentsByModule(session.module_id);
     attendanceRepository.saveMany(buildRecords(sessionId, enrolled, absentStudentIds));
-    fireQuotaEvents(session.module_id, enrolled); // <-- added: notify observers
+    fireQuotaEvents(session.module_id, enrolled);
     return { session, records: attendanceRepository.findBySession(sessionId) };
   },
 
-  // View a session with each student's current status (for the edit screen).
   getSession(lecturerId: number, sessionId: number) {
     const session = sessionRepository.findById(sessionId);
     if (!session) throw new Error('Session not found');
