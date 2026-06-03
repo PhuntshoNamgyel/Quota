@@ -1,19 +1,18 @@
 // src/app.ts
-// Presentation-layer entry point. Builds the Express app and mounts routes.
+import 'dotenv/config';                 // load environment variables before anything else
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import authRoutes from './routes/authRoutes';
 
 const app = express();
 
-app.use(cors());            // allow the Expo app to call this API
-app.use(express.json());    // parse JSON request bodies
+app.use(cors());
+app.use(express.json());
 
-// Health check — confirms the API is alive (real routes come later)
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'Quota API', time: new Date().toISOString() });
 });
+
+app.use('/api/auth', authRoutes);
 
 export default app;
