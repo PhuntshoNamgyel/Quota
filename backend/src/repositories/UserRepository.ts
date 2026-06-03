@@ -16,6 +16,11 @@ export class UserRepository {
     return db.prepare('SELECT * FROM users WHERE id = ?').get(id) as User | undefined;
   }
 
+  // All students — used by the lecturer to pick who to enrol.
+  findAllStudents(): User[] {
+    return db.prepare("SELECT * FROM users WHERE role = 'student' ORDER BY name").all() as User[];
+  }
+  
   // Create a new user and return the created row.
   create(name: string, email: string, passwordHash: string, role: Role): User {
     const result = db

@@ -1,8 +1,9 @@
 // src/app.ts
-import 'dotenv/config';                 // load environment variables before anything else
+import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import authRoutes from './routes/authRoutes';
+import moduleRoutes from './routes/moduleRoutes';
 
 const app = express();
 
@@ -14,5 +15,6 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/modules', moduleRoutes);
 
 export default app;

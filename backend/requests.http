@@ -1,0 +1,51 @@
+@baseUrl = http://localhost:4000
+
+### Log in as lecturer (click "Send Request" above this line first)
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "lecturer@quota.bt", "password": "password123" }
+
+### The token is pulled automatically from the login response above
+@token = {{login.response.body.token}}
+
+### FR04 — create a module
+POST {{baseUrl}}/api/modules
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "CTE205 Operating Systems", "schedule": [{ "day_of_week": "Tuesday", "start_time": "13:00", "end_time": "15:00" }] }
+
+### FR06 — list lecturer modules
+GET {{baseUrl}}/api/modules
+Authorization: Bearer {{token}}
+
+### Students available to enrol
+GET {{baseUrl}}/api/modules/students/all
+Authorization: Bearer {{token}}
+
+### FR05 — enrol student 2 into module 2
+POST {{baseUrl}}/api/modules/2/enrolments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "studentId": 2 }
+
+### Enrolled students in module 2
+GET {{baseUrl}}/api/modules/2/students
+Authorization: Bearer {{token}}
+
+### RBAC check — log in as a student
+# @name studentLogin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "sonam@quota.bt", "password": "password123" }
+
+### Student tries to create a module — must return 403
+POST {{baseUrl}}/api/modules
+Authorization: Bearer {{studentLogin.response.body.token}}
+Content-Type: application/json
+
+{ "name": "Nope", "schedule": [{ "day_of_week": "Monday", "start_time": "09:00", "end_time": "10:00" }] }
