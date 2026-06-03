@@ -5,6 +5,7 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes';
 import moduleRoutes from './routes/moduleRoutes';
 import sessionRoutes from './routes/sessionRoutes';
+import studentRoutes from './routes/studentRoutes';
 
 const app = express();
 
@@ -18,5 +19,6 @@ app.get('/api/health', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/modules', moduleRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/student', studentRoutes);
 
 export default app;
