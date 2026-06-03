@@ -76,4 +76,6 @@ db.exec(`
   );
 `);
 
+try { db.exec(`ALTER TABLE notifications ADD COLUMN is_read INTEGER NOT NULL DEFAULT 0`); } catch { /* already added */ }
+
 export default db;

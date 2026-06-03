@@ -16,5 +16,12 @@ export class NotificationRepository {
     return db.prepare('SELECT * FROM notifications WHERE student_id = ? ORDER BY created_at DESC, id DESC')
       .all(studentId) as Notification[];
   }
+  countUnread(studentId: number): number {
+    const row = db.prepare('SELECT COUNT(*) AS n FROM notifications WHERE student_id = ? AND is_read = 0').get(studentId) as { n: number };
+    return row.n;
+  }
+  markAllRead(studentId: number): void {
+    db.prepare('UPDATE notifications SET is_read = 1 WHERE student_id = ?').run(studentId);
+  }
 }
 export const notificationRepository = new NotificationRepository();
