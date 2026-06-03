@@ -4,11 +4,14 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme';
+import { RootStackParams } from './types';
 import LoginScreen from '../screens/LoginScreen';
-import LecturerHomeScreen from '../screens/lecturer/LecturerHomeScreen';
+import ModuleListScreen from '../screens/lecturer/ModuleListScreen';
+import CreateModuleScreen from '../screens/lecturer/CreateModuleScreen';
+import ModuleDetailScreen from '../screens/lecturer/ModuleDetailScreen';
 import StudentDashboardScreen from '../screens/student/StudentDashboardScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParams>();
 
 const screenOptions = {
   headerStyle: { backgroundColor: colors.primary },
@@ -26,14 +29,12 @@ export default function RootNavigator() {
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
         ) : user.role === 'lecturer' ? (
           <>
-            <Stack.Screen name="LecturerHome" component={LecturerHomeScreen} options={{ title: 'My Modules' }} />
-            {/* more lecturer screens added in Tasks 11–12 */}
+            <Stack.Screen name="ModuleList" component={ModuleListScreen} options={{ title: 'My Modules' }} />
+            <Stack.Screen name="CreateModule" component={CreateModuleScreen} options={{ title: 'New Module' }} />
+            <Stack.Screen name="ModuleDetail" component={ModuleDetailScreen} />
           </>
         ) : (
-          <>
-            <Stack.Screen name="StudentDashboard" component={StudentDashboardScreen} options={{ title: 'My Attendance' }} />
-            {/* more student screens added in Task 13 */}
-          </>
+          <Stack.Screen name="StudentDashboard" component={StudentDashboardScreen} options={{ title: 'My Attendance' }} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
