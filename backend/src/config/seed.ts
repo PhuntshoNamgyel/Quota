@@ -1,15 +1,17 @@
 // src/config/seed.ts
-// Seeds real cohort data with realistic attendance (most compliant, a few exceptions).
+// Seeds real cohort data with realistic attendance AND the matching threshold alerts.
 // Run with: npm run seed
 import bcrypt from 'bcryptjs';
 import db from './db';
+import { computeQuota } from '../services/quotaService';
+import { levelFor } from '../observers/NotificationObserver';
+import { notificationRepository } from '../repositories/NotificationRepository';
 
 const PASSWORD = 'password123';
 const YEAR = 2026;
 
 const LECTURER = { name: 'Module Lecturer', email: 'lecturer.cst@rub.edu.bt' };
 
-// 27 students (SL No. 5 excluded). [studentNumber, fullName]
 const STUDENTS: [string, string][] = [
   ['02240337', 'Ugyen Kinley Phuntshok'],
   ['02240340', 'Gayley Choden'],
@@ -40,12 +42,13 @@ const STUDENTS: [string, string][] = [
   ['02230293', 'Norbu Dhendup'],
 ];
 
-// Each module has one or more weekly slots (verify times against your timetable; display-only).
 const MODULES = [
   { name: 'SWE201 Cross Platform Development', slots: [
     { day: 'Tuesday', start: '10:15', end: '12:15' },
+    { day: 'Wednesday', start: '11:15', end: '1:15'},
   ]},
   { name: 'SDA202 System Design & Solution Architecture', slots: [
+    { day: 'Tuesday', start: '1:15', end: '3:15'},
     { day: 'Wednesday', start: '09:00', end: '11:00' },
   ]},
   { name: 'CTE205 Operating Systems', slots: [
@@ -58,12 +61,12 @@ const MODULES = [
     { day: 'Tuesday', start: '09:00', end: '10:00' },
     { day: 'Thursday', start: '10:15', end: '12:15' },
   ]},
-  { name: 'DSO101 Continuous Integration & Deployment', slots: [
+  { name: 'DSO101 Continuous Integration & Continuous Deployment', slots: [
     { day: 'Monday', start: '09:00', end: '11:15' },
+    { day: 'Thursday', start: '1:15', end: '3:15'},
   ]},
 ];
 
-// Sessions per month: 9 (Mar) + 9 (Apr) + 8 (May) = 26 per module.
 const MONTHS: [number, number][] = [[3, 9], [4, 9], [5, 8]];
 const TOTAL = STUDENTS.length;
 
@@ -76,7 +79,6 @@ function monthDates(month: number, count: number): string[] {
   });
 }
 
-// Realistic spread: most students compliant; ~1 red and ~3 yellow per module.
 function absencesFor(studentIndex: number, moduleIndex: number): number {
   const redStudent = (moduleIndex * 5) % TOTAL;
   if (studentIndex === redStudent) return 6;                       // 20/26 = 76.9% (red, exceptional)
@@ -109,7 +111,9 @@ function seed() {
     insertUser.run(name, `${no}.cst@rub.edu.bt`, hash, 'student').lastInsertRowid as number
   );
 
-  const sessionDates = MONTHS.flatMap(([m, c]) => monthDates(m, c));
+  const sessionDates = MONTHS.flatMap(([m, c]) => monthDates(m, c)); // 26 dates
+  const held = sessionDates.length;
+  let alertsCreated = 0;
 
   db.transaction(() => {
     MODULES.forEach((mod, moduleIndex) => {
@@ -124,11 +128,16 @@ function seed() {
         sessionIds.forEach((sessionId, i) => {
           insertRecord.run(sessionId, sid, i < absences ? 'absent' : 'present');
         });
+
+        // Generate the same alert the Observer would on a real submission, so seeded data is consistent.
+        const q = computeQuota(held - absences, absences);
+        const alert = levelFor(q.percentage, q.remainingAbsences);
+        if (alert) { notificationRepository.create(sid, moduleId, alert.level, alert.message); alertsCreated++; }
       });
     });
   })();
 
-  console.log(`Seed complete: 1 lecturer, ${STUDENTS.length} students, ${MODULES.length} modules, ${sessionDates.length} sessions each.`);
+  console.log(`Seed complete: 1 lecturer, ${STUDENTS.length} students, ${MODULES.length} modules, ${held} sessions each, ${alertsCreated} alerts.`);
 }
 
 seed();

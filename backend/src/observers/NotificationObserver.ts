@@ -2,7 +2,7 @@
 import { AttendanceObserver, QuotaEvent } from './AttendanceSubject';
 import { notificationRepository } from '../repositories/NotificationRepository';
 
-function levelFor(percentage: number, remaining: number): { level: string; message: string } | null {
+export function levelFor(percentage: number, remaining: number): { level: string; message: string } | null {
   if (percentage < 80) {                                                                                  // FR22b
     return { level: 'critical', message: 'You are below 80% and non-compliant. No medical exemption applies — contact your lecturer immediately.' };
   }
