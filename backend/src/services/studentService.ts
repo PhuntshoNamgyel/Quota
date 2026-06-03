@@ -19,7 +19,9 @@ export const studentService = {
   },
 
   getNotifications(studentId: number) {
-    return notificationRepository.findByStudent(studentId);
+    const rows = notificationRepository.findByStudent(studentId);
+    notificationRepository.markAllRead(studentId); // mark read on fetch, so the badge clears reliably
+    return rows;
   },
 
   getUnreadCount(studentId: number) {

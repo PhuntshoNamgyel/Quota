@@ -14,7 +14,8 @@ export default function StudentNotificationsScreen() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    setRows(await api.get('/api/student/notifications'));
+    const data = await api.get('/api/student/notifications'); // server marks these read on fetch
+    setRows(data);
     setLoading(false);
   }, []);
 

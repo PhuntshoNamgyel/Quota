@@ -61,13 +61,13 @@ const MODULES = [
     { day: 'Tuesday', start: '09:00', end: '10:00' },
     { day: 'Thursday', start: '10:15', end: '12:15' },
   ]},
-  { name: 'DSO101 Continuous Integration & Continuous Deployment', slots: [
+  { name: 'DSO101 Continuous Integration & Deployment', slots: [
     { day: 'Monday', start: '09:00', end: '11:15' },
     { day: 'Thursday', start: '1:15', end: '3:15'},
   ]},
 ];
 
-const MONTHS: [number, number][] = [[3, 9], [4, 9], [5, 8]];
+const MONTHS: [number, number][] = [[3, 9], [4, 9], [5, 8]]; // 9 (Mar) + 9 (Apr) + 8 (May) = 26 per module
 const TOTAL = STUDENTS.length;
 
 function monthDates(month: number, count: number): string[] {
@@ -80,7 +80,7 @@ function monthDates(month: number, count: number): string[] {
 }
 
 function absencesFor(studentIndex: number, moduleIndex: number): number {
-  const redStudent = (moduleIndex * 5) % TOTAL;
+  const redStudent = (moduleIndex * 7 + 3) % TOTAL;                 // index 3 (Jigme) is red in SWE201
   if (studentIndex === redStudent) return 6;                       // 20/26 = 76.9% (red, exceptional)
   const yellow = [0, 1, 2].map((k) => (moduleIndex * 4 + 1 + k) % TOTAL);
   if (yellow.includes(studentIndex)) return 3 + (studentIndex % 2); // 3-4 absences (medical zone)
