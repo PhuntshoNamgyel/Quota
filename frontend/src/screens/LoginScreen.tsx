@@ -24,7 +24,7 @@ export default function LoginScreen() {
 
   // Convenience for testing/demo — prefills a seeded account.
   function quickFill(role: 'lecturer' | 'student') {
-    setEmail(role === 'lecturer' ? 'lecturer@quota.bt' : 'sonam@quota.bt');
+    setEmail(role === 'lecturer' ? 'lecturer.cst@rub.edu.bt' : '02240354.cst@rub.edu.bt');
     setPassword('password123');
   }
 

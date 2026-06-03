@@ -1,5 +1,4 @@
 // src/services/moduleService.ts
-// Business Logic layer: module setup, scheduling, enrolment, and ownership rules.
 import { moduleRepository } from '../repositories/ModuleRepository';
 import { scheduleRepository } from '../repositories/ScheduleRepository';
 import { enrolmentRepository } from '../repositories/EnrolmentRepository';
@@ -7,20 +6,15 @@ import { userRepository } from '../repositories/UserRepository';
 import { Module, User } from '../models';
 
 interface ScheduleInput { day_of_week: string; start_time: string; end_time: string; }
-
-function publicUser(u: User) {
-  return { id: u.id, name: u.name, email: u.email, role: u.role };
-}
+function publicUser(u: User) { return { id: u.id, name: u.name, email: u.email, role: u.role }; }
 
 export const moduleService = {
-  // FR04: create a module and its weekly schedule.
   createModule(lecturerId: number, name: string, schedule: ScheduleInput[]) {
     const module = moduleRepository.create(name, lecturerId);
     schedule.forEach((s) => scheduleRepository.create(module.id, s.day_of_week, s.start_time, s.end_time));
     return { ...module, schedule: scheduleRepository.findByModule(module.id) };
   },
 
-  // FR06 data: the lecturer's modules with their schedules.
   listLecturerModules(lecturerId: number) {
     return moduleRepository.findByLecturer(lecturerId).map((m) => ({
       ...m,
@@ -28,14 +22,12 @@ export const moduleService = {
     }));
   },
 
-  // Confirms the module exists AND belongs to this lecturer (NFR03: own data only).
   assertOwned(lecturerId: number, moduleId: number): Module {
     const module = moduleRepository.findById(moduleId);
     if (!module || module.lecturer_id !== lecturerId) throw new Error('Module not found');
     return module;
   },
 
-  // FR05: enrol a student into one of the lecturer's modules.
   enrolStudent(lecturerId: number, moduleId: number, studentId: number) {
     this.assertOwned(lecturerId, moduleId);
     const student = userRepository.findById(studentId);
@@ -51,5 +43,10 @@ export const moduleService = {
 
   listAllStudents() {
     return userRepository.findAllStudents().map(publicUser);
+  },
+
+  deleteModule(lecturerId: number, moduleId: number) {
+    this.assertOwned(lecturerId, moduleId);
+    moduleRepository.delete(moduleId);
   },
 };

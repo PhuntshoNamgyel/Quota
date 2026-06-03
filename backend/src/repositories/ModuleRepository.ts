@@ -1,5 +1,4 @@
 // src/repositories/ModuleRepository.ts
-// Repository Pattern: all SQL for the `modules` table.
 import db from '../config/db';
 import { Module } from '../models';
 
@@ -13,6 +12,10 @@ export class ModuleRepository {
   }
   findByLecturer(lecturerId: number): Module[] {
     return db.prepare('SELECT * FROM modules WHERE lecturer_id = ? ORDER BY id').all(lecturerId) as Module[];
+  }
+  delete(id: number): void {
+    // FK cascades remove the module's schedules, enrolments, sessions and attendance records.
+    db.prepare('DELETE FROM modules WHERE id = ?').run(id);
   }
 }
 export const moduleRepository = new ModuleRepository();

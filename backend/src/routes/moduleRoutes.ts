@@ -1,24 +1,22 @@
 // src/routes/moduleRoutes.ts
-// Presentation layer: lecturer-only module management + session operations.
 import { Router } from 'express';
 import { moduleController } from '../controllers/moduleController';
 import { attendanceController } from '../controllers/attendanceController';
-import { authenticate, authorize } from '../middleware/auth';
 import { reportController } from '../controllers/reportController';
+import { authenticate, authorize } from '../middleware/auth';
 
 const router = Router();
-
 router.use(authenticate, authorize('lecturer'));
 
-router.post('/', moduleController.create);                  // FR04
-router.get('/', moduleController.list);                     // FR06 data
+router.post('/', moduleController.create);
+router.get('/', moduleController.list);
 router.get('/students/all', moduleController.allStudents);
-router.post('/:id/enrolments', moduleController.enrol);     // FR05
+router.post('/:id/enrolments', moduleController.enrol);
 router.get('/:id/students', moduleController.students);
-
-router.get('/:id/roster', attendanceController.roster);        // FR07 + FR09
-router.post('/:id/sessions', attendanceController.submit);     // FR11
+router.delete('/:id', moduleController.remove);               // delete module
+router.get('/:id/roster', attendanceController.roster);
+router.post('/:id/sessions', attendanceController.submit);
 router.get('/:id/sessions', attendanceController.listSessions);
-router.get('/:id/report', reportController.moduleReport); // FR23 + FR24
+router.get('/:id/report', reportController.moduleReport);
 
 export default router;

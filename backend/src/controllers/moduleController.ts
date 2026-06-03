@@ -1,5 +1,4 @@
 // src/controllers/moduleController.ts
-// MVC Controller: HTTP in, moduleService out.
 import { Request, Response } from 'express';
 import { moduleService } from '../services/moduleService';
 
@@ -26,16 +25,19 @@ export const moduleController = {
     if (!studentId) { res.status(400).json({ error: 'studentId is required' }); return; }
     try {
       res.status(201).json(moduleService.enrolStudent(req.user!.userId, Number(req.params.id), Number(studentId)));
-    } catch (err) {
-      res.status(404).json({ error: (err as Error).message });
-    }
+    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
   },
 
   students(req: Request, res: Response): void {
     try {
       res.json(moduleService.listEnrolledStudents(req.user!.userId, Number(req.params.id)));
-    } catch (err) {
-      res.status(404).json({ error: (err as Error).message });
-    }
+    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
+  },
+
+  remove(req: Request, res: Response): void {
+    try {
+      moduleService.deleteModule(req.user!.userId, Number(req.params.id));
+      res.json({ deleted: true });
+    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
   },
 };

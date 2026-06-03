@@ -1,6 +1,6 @@
 // src/screens/lecturer/ModuleDetailScreen.tsx
 import React, { useState, useCallback, useLayoutEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { api } from '../../api/client';
@@ -11,12 +11,16 @@ type Props = NativeStackScreenProps<RootStackParams, 'ModuleDetail'>;
 interface Student { id: number; name: string; email: string; }
 interface SessionRow { id: number; date: string; }
 
+const studentNo = (email: string) => email.split('.')[0]; // "02240354.cst@rub.edu.bt" -> "02240354"
+
 export default function ModuleDetailScreen({ route, navigation }: Props) {
   const { moduleId, moduleName } = route.params;
   const [enrolled, setEnrolled] = useState<Student[]>([]);
   const [all, setAll] = useState<Student[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [studentsOpen, setStudentsOpen] = useState(false);
+  const [sessionsOpen, setSessionsOpen] = useState(false);
 
   useLayoutEffect(() => { navigation.setOptions({ title: moduleName }); }, [navigation, moduleName]);
 
@@ -31,9 +35,19 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  async function enrol(studentId: number) {
-    await api.post(`/api/modules/${moduleId}/enrolments`, { studentId });
-    load();
+  async function enrol(id: number) { await api.post(`/api/modules/${moduleId}/enrolments`, { studentId: id }); load(); }
+
+  function confirmDelete() {
+    Alert.alert(
+      'Delete module',
+      `Delete "${moduleName}"? All its sessions and attendance records will be removed. This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: async () => {
+            try { await api.delete(`/api/modules/${moduleId}`); navigation.goBack(); } catch {}
+          } },
+      ],
+    );
   }
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
@@ -52,31 +66,48 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.section}>Enrolled ({enrolled.length})</Text>
-      {enrolled.length === 0
-        ? <Text style={styles.muted}>No students enrolled yet.</Text>
-        : enrolled.map((s) => <View key={'e' + s.id} style={styles.row}><Text style={styles.rowName}>{s.name}</Text></View>)}
-
-      <Text style={styles.section}>Add students</Text>
-      {available.length === 0
-        ? <Text style={styles.muted}>All students are enrolled.</Text>
-        : available.map((s) => (
-            <TouchableOpacity key={'a' + s.id} style={styles.actionRow} onPress={() => enrol(s.id)}>
-              <Text style={styles.rowName}>{s.name}</Text>
-              <Text style={styles.addLabel}>+ Add</Text>
-            </TouchableOpacity>
-          ))}
-
-      <Text style={styles.section}>Past sessions ({sessions.length})</Text>
-      {sessions.length === 0
+      <TouchableOpacity style={styles.sectionHeader} onPress={() => setSessionsOpen((v) => !v)}>
+        <Text style={styles.sectionTitle}>Sessions ({sessions.length})</Text>
+        <Text style={styles.toggle}>{sessionsOpen ? 'Hide' : 'Show'}</Text>
+      </TouchableOpacity>
+      {sessionsOpen && (sessions.length === 0
         ? <Text style={styles.muted}>No sessions yet.</Text>
         : sessions.map((s) => (
-            <TouchableOpacity key={'s' + s.id} style={styles.actionRow}
+            <TouchableOpacity key={'s' + s.id} style={styles.row}
               onPress={() => navigation.navigate('MarkAttendance', { moduleId, moduleName, sessionId: s.id })}>
               <Text style={styles.rowName}>{s.date}</Text>
               <Text style={styles.editLabel}>Edit ›</Text>
             </TouchableOpacity>
+          )))}
+
+      <TouchableOpacity style={styles.sectionHeader} onPress={() => setStudentsOpen((v) => !v)}>
+        <Text style={styles.sectionTitle}>Students ({enrolled.length})</Text>
+        <Text style={styles.toggle}>{studentsOpen ? 'Hide' : 'Show'}</Text>
+      </TouchableOpacity>
+      {studentsOpen && (
+        <>
+          {enrolled.map((s) => (
+            <View key={'e' + s.id} style={styles.row}>
+              <Text style={styles.rowName}>{s.name}</Text>
+              <Text style={styles.rowNo}>{studentNo(s.email)}</Text>
+            </View>
           ))}
+          {available.length > 0 && <Text style={styles.subSection}>Add students</Text>}
+          {available.map((s) => (
+            <TouchableOpacity key={'a' + s.id} style={styles.row} onPress={() => enrol(s.id)}>
+              <View>
+                <Text style={styles.rowName}>{s.name}</Text>
+                <Text style={styles.rowNoSmall}>{studentNo(s.email)}</Text>
+              </View>
+              <Text style={styles.addLabel}>+ Add</Text>
+            </TouchableOpacity>
+          ))}
+        </>
+      )}
+
+      <TouchableOpacity style={styles.deleteBtn} onPress={confirmDelete}>
+        <Text style={styles.deleteText}>Delete module</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -84,16 +115,22 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  btnRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
+  btnRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
   takeBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
   takeBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   reportBtn: { flex: 1, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', backgroundColor: colors.card },
   reportBtnText: { color: colors.primary, fontWeight: '700', fontSize: 15 },
-  section: { fontSize: 13, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10, marginTop: 18 },
-  row: { backgroundColor: colors.card, borderRadius: 10, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
-  actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, marginTop: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+  toggle: { fontSize: 14, fontWeight: '600', color: colors.primary },
+  subSection: { fontSize: 12, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 14, marginBottom: 6 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, padding: 14, marginTop: 8, borderWidth: 1, borderColor: colors.border },
   rowName: { fontSize: 15, color: colors.text, fontWeight: '500' },
+  rowNo: { fontSize: 13, color: colors.muted, fontVariant: ['tabular-nums'] },
+  rowNoSmall: { fontSize: 12, color: colors.muted, marginTop: 2 },
   addLabel: { color: colors.primary, fontWeight: '700' },
   editLabel: { color: colors.muted, fontWeight: '600' },
-  muted: { color: colors.muted },
+  muted: { color: colors.muted, marginTop: 8 },
+  deleteBtn: { marginTop: 28, borderWidth: 1, borderColor: colors.red, borderRadius: 12, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.card },
+  deleteText: { color: colors.red, fontWeight: '700' },
 });

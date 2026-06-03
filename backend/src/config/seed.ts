@@ -1,12 +1,93 @@
 // src/config/seed.ts
-// Inserts sample data so every feature can be tested and demoed immediately.
+// Seeds real cohort data with realistic attendance (most compliant, a few exceptions).
 // Run with: npm run seed
 import bcrypt from 'bcryptjs';
 import db from './db';
 
+const PASSWORD = 'password123';
+const YEAR = 2026;
+
+const LECTURER = { name: 'Module Lecturer', email: 'lecturer.cst@rub.edu.bt' };
+
+// 27 students (SL No. 5 excluded). [studentNumber, fullName]
+const STUDENTS: [string, string][] = [
+  ['02240337', 'Ugyen Kinley Phuntshok'],
+  ['02240340', 'Gayley Choden'],
+  ['02240343', 'Jigden Shakya'],
+  ['02240344', 'Jigme Ngawang Chogyal'],
+  ['02240349', 'Lhundup Dorji'],
+  ['02240350', 'Namgay Lhamo'],
+  ['02240352', 'Nyendrak Yoezer Zangmo'],
+  ['02240353', 'Pema Losel Maurer'],
+  ['02240354', 'Phuntsho Namgyel'],
+  ['02240355', 'Sangay Choden'],
+  ['02240358', 'Sherab Nima Rigzin'],
+  ['02240360', 'Sonam Choki'],
+  ['02240361', 'Sonam Choki'],
+  ['02240362', 'Sonam Dorji'],
+  ['02240363', 'Sonam Wangmo'],
+  ['02240365', 'Sonam Zangmo'],
+  ['02240370', 'Wangchuk Gyeltshen Zangpo'],
+  ['02240371', 'Yeshey Lhaden'],
+  ['02240372', 'Yeshey Zhennue'],
+  ['02230284', 'Karma Namgay Dorji'],
+  ['02230288', 'Kinley Tobgay Lhendrup'],
+  ['02230292', 'Nidup Dorji'],
+  ['02230298', 'Sangay Tenzin'],
+  ['02230304', 'Tandin Wangchuk'],
+  ['02230308', 'Thinley Dorji'],
+  ['02230309', 'Tshering Norbu'],
+  ['02230293', 'Norbu Dhendup'],
+];
+
+// Each module has one or more weekly slots (verify times against your timetable; display-only).
+const MODULES = [
+  { name: 'SWE201 Cross Platform Development', slots: [
+    { day: 'Tuesday', start: '10:15', end: '12:15' },
+  ]},
+  { name: 'SDA202 System Design & Solution Architecture', slots: [
+    { day: 'Wednesday', start: '09:00', end: '11:00' },
+  ]},
+  { name: 'CTE205 Operating Systems', slots: [
+    { day: 'Monday', start: '13:15', end: '14:15' },
+    { day: 'Thursday', start: '09:00', end: '10:00' },
+    { day: 'Friday', start: '09:00', end: '10:00' },
+  ]},
+  { name: 'DIS303 Cryptology', slots: [
+    { day: 'Monday', start: '11:15', end: '12:15' },
+    { day: 'Tuesday', start: '09:00', end: '10:00' },
+    { day: 'Thursday', start: '10:15', end: '12:15' },
+  ]},
+  { name: 'DSO101 Continuous Integration & Deployment', slots: [
+    { day: 'Monday', start: '09:00', end: '11:15' },
+  ]},
+];
+
+// Sessions per month: 9 (Mar) + 9 (Apr) + 8 (May) = 26 per module.
+const MONTHS: [number, number][] = [[3, 9], [4, 9], [5, 8]];
+const TOTAL = STUDENTS.length;
+
+function monthDates(month: number, count: number): string[] {
+  const daysInMonth = new Date(YEAR, month, 0).getDate();
+  const step = Math.max(1, Math.floor(daysInMonth / (count + 1)));
+  return Array.from({ length: count }, (_, i) => {
+    const day = Math.min(daysInMonth, (i + 1) * step);
+    return `${YEAR}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  });
+}
+
+// Realistic spread: most students compliant; ~1 red and ~3 yellow per module.
+function absencesFor(studentIndex: number, moduleIndex: number): number {
+  const redStudent = (moduleIndex * 5) % TOTAL;
+  if (studentIndex === redStudent) return 6;                       // 20/26 = 76.9% (red, exceptional)
+  const yellow = [0, 1, 2].map((k) => (moduleIndex * 4 + 1 + k) % TOTAL);
+  if (yellow.includes(studentIndex)) return 3 + (studentIndex % 2); // 3-4 absences (medical zone)
+  return studentIndex % 3;                                          // 0-2 absences (green: 92-100%)
+}
+
 function seed() {
-  // Wipe existing rows (child tables first) so the seed is repeatable.
   db.exec(`
+    DELETE FROM notifications;
     DELETE FROM attendance_records;
     DELETE FROM sessions;
     DELETE FROM enrolments;
@@ -15,51 +96,39 @@ function seed() {
     DELETE FROM users;
   `);
 
-  const hash = (pw: string) => bcrypt.hashSync(pw, 10);
-  const insertUser = db.prepare(
-    'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)'
+  const hash = bcrypt.hashSync(PASSWORD, 10);
+  const insertUser     = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
+  const insertModule   = db.prepare('INSERT INTO modules (name, lecturer_id) VALUES (?, ?)');
+  const insertSchedule = db.prepare('INSERT INTO schedules (module_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)');
+  const insertEnrol    = db.prepare('INSERT INTO enrolments (module_id, student_id) VALUES (?, ?)');
+  const insertSession  = db.prepare('INSERT INTO sessions (module_id, date) VALUES (?, ?)');
+  const insertRecord   = db.prepare('INSERT INTO attendance_records (session_id, student_id, status) VALUES (?, ?, ?)');
+
+  const lecturerId = insertUser.run(LECTURER.name, LECTURER.email, hash, 'lecturer').lastInsertRowid as number;
+  const studentIds = STUDENTS.map(([no, name]) =>
+    insertUser.run(name, `${no}.cst@rub.edu.bt`, hash, 'student').lastInsertRowid as number
   );
 
-  // 1 lecturer + 3 students. All passwords are "password123".
-  const lecturerId = insertUser.run('Dr. Tashi', 'lecturer@quota.bt', hash('password123'), 'lecturer').lastInsertRowid as number;
-  const s1 = insertUser.run('Sonam', 'sonam@quota.bt', hash('password123'), 'student').lastInsertRowid as number;
-  const s2 = insertUser.run('Pema',  'pema@quota.bt',  hash('password123'), 'student').lastInsertRowid as number;
-  const s3 = insertUser.run('Karma', 'karma@quota.bt', hash('password123'), 'student').lastInsertRowid as number;
+  const sessionDates = MONTHS.flatMap(([m, c]) => monthDates(m, c));
 
-  // 1 module owned by the lecturer, with a weekly schedule.
-  const moduleId = db.prepare('INSERT INTO modules (name, lecturer_id) VALUES (?, ?)')
-    .run('SWE201 Cross Platform Development', lecturerId).lastInsertRowid as number;
-  db.prepare('INSERT INTO schedules (module_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)')
-    .run(moduleId, 'Monday', '09:00', '11:00');
+  db.transaction(() => {
+    MODULES.forEach((mod, moduleIndex) => {
+      const moduleId = insertModule.run(mod.name, lecturerId).lastInsertRowid as number;
+      mod.slots.forEach((s) => insertSchedule.run(moduleId, s.day, s.start, s.end));
+      studentIds.forEach((sid) => insertEnrol.run(moduleId, sid));
 
-  // Enrol all three students.
-  const enrol = db.prepare('INSERT INTO enrolments (module_id, student_id) VALUES (?, ?)');
-  [s1, s2, s3].forEach((sid) => enrol.run(moduleId, sid));
+      const sessionIds = sessionDates.map((d) => insertSession.run(moduleId, d).lastInsertRowid as number);
 
-  // 10 past sessions with attendance designed to hit each colour band:
-  //   Sonam 1 absent  -> 90% green | Pema 2 absent -> 80% yellow | Karma 3 absent -> 70% red
-  const insertSession = db.prepare('INSERT INTO sessions (module_id, date) VALUES (?, ?)');
-  const insertRecord  = db.prepare('INSERT INTO attendance_records (session_id, student_id, status) VALUES (?, ?, ?)');
-
-  const sessionIds: number[] = [];
-  for (let i = 1; i <= 10; i++) {
-    sessionIds.push(insertSession.run(moduleId, `2026-05-${String(i).padStart(2, '0')}`).lastInsertRowid as number);
-  }
-
-  const absentSessions: Record<number, number[]> = {
-    [s1]: [1],          // 9/10 attended = 90%  -> green
-    [s2]: [1, 2],       // 8/10 attended = 80%  -> yellow
-    [s3]: [1, 2, 3],    // 7/10 attended = 70%  -> red
-  };
-
-  [s1, s2, s3].forEach((sid) => {
-    sessionIds.forEach((sessionId, idx) => {
-      const isAbsent = absentSessions[sid].includes(idx + 1);
-      insertRecord.run(sessionId, sid, isAbsent ? 'absent' : 'present');
+      studentIds.forEach((sid, studentIndex) => {
+        const absences = absencesFor(studentIndex, moduleIndex);
+        sessionIds.forEach((sessionId, i) => {
+          insertRecord.run(sessionId, sid, i < absences ? 'absent' : 'present');
+        });
+      });
     });
-  });
+  })();
 
-  console.log('Seed complete: 1 lecturer, 3 students, 1 module, 10 sessions, attendance set (green/yellow/red).');
+  console.log(`Seed complete: 1 lecturer, ${STUDENTS.length} students, ${MODULES.length} modules, ${sessionDates.length} sessions each.`);
 }
 
 seed();
