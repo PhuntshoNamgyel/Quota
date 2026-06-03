@@ -43,9 +43,14 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-      <TouchableOpacity style={styles.takeBtn} onPress={() => navigation.navigate('MarkAttendance', { moduleId, moduleName })}>
-        <Text style={styles.takeBtnText}>Take attendance</Text>
-      </TouchableOpacity>
+      <View style={styles.btnRow}>
+        <TouchableOpacity style={styles.takeBtn} onPress={() => navigation.navigate('MarkAttendance', { moduleId, moduleName })}>
+          <Text style={styles.takeBtnText}>Take attendance</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.reportBtn} onPress={() => navigation.navigate('Reports', { moduleId, moduleName })}>
+          <Text style={styles.reportBtnText}>View report</Text>
+        </TouchableOpacity>
+      </View>
 
       <Text style={styles.section}>Enrolled ({enrolled.length})</Text>
       {enrolled.length === 0
@@ -79,8 +84,11 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  takeBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginBottom: 20 },
+  btnRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
+  takeBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
   takeBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  reportBtn: { flex: 1, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', backgroundColor: colors.card },
+  reportBtnText: { color: colors.primary, fontWeight: '700', fontSize: 15 },
   section: { fontSize: 13, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10, marginTop: 18 },
   row: { backgroundColor: colors.card, borderRadius: 10, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
   actionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: colors.border },

@@ -5,5 +5,6 @@ export type RootStackParams = {
   CreateModule: undefined;
   ModuleDetail: { moduleId: number; moduleName: string };
   MarkAttendance: { moduleId: number; moduleName: string; sessionId?: number };
+  Reports: { moduleId: number; moduleName: string };
   StudentDashboard: undefined;
 };
