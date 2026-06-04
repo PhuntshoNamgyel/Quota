@@ -2,14 +2,16 @@
 import { Request, Response } from 'express';
 import { moduleService } from '../services/moduleService';
 
+const planned = (v: unknown) => (Number(v) > 0 ? Math.floor(Number(v)) : 30);
+
 export const moduleController = {
   create(req: Request, res: Response): void {
-    const { name, schedule } = req.body ?? {};
+    const { name, schedule, totalClasses } = req.body ?? {};
     if (!name || !Array.isArray(schedule) || schedule.length === 0) {
       res.status(400).json({ error: 'name and a non-empty schedule array are required' });
       return;
     }
-    res.status(201).json(moduleService.createModule(req.user!.userId, name, schedule));
+    res.status(201).json(moduleService.createModule(req.user!.userId, name, schedule, planned(totalClasses)));
   },
 
   list(req: Request, res: Response): void {
@@ -47,13 +49,13 @@ export const moduleController = {
   },
 
   update(req: Request, res: Response): void {
-    const { name, schedule } = req.body ?? {};
+    const { name, schedule, totalClasses } = req.body ?? {};
     if (!name || !Array.isArray(schedule) || schedule.length === 0) {
       res.status(400).json({ error: 'name and a non-empty schedule array are required' });
       return;
     }
     try {
-      res.json(moduleService.updateModule(req.user!.userId, Number(req.params.id), name, schedule));
+      res.json(moduleService.updateModule(req.user!.userId, Number(req.params.id), name, schedule, planned(totalClasses)));
     } catch (err) { res.status(404).json({ error: (err as Error).message }); }
   },
 

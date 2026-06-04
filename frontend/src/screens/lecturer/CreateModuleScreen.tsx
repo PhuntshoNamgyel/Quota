@@ -11,7 +11,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 interface Slot { day: string; start: string; end: string; }
 interface ScheduleRow { day_of_week: string; start_time: string; end_time: string; }
-interface ModuleItem { id: number; name: string; schedule: ScheduleRow[]; }
+interface ModuleItem { id: number; name: string; total_classes: number; schedule: ScheduleRow[]; }
 
 const newSlot = (): Slot => ({ day: 'Monday', start: '09:00', end: '11:00' });
 
@@ -20,6 +20,7 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
   const isEdit = moduleId != null;
 
   const [name, setName] = useState('');
+  const [total, setTotal] = useState('30');
   const [slots, setSlots] = useState<Slot[]>([newSlot()]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -29,7 +30,6 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
     navigation.setOptions({ title: isEdit ? 'Edit Module' : 'New Module' });
   }, [navigation, isEdit]);
 
-  // Edit mode: prefill the form with the module's current name and schedule.
   useEffect(() => {
     if (!isEdit) return;
     (async () => {
@@ -38,6 +38,7 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
         const m = modules.find((x) => x.id === moduleId);
         if (m) {
           setName(m.name);
+          setTotal(String(m.total_classes ?? 30));
           setSlots(m.schedule.length
             ? m.schedule.map((s) => ({ day: s.day_of_week, start: s.start_time, end: s.end_time }))
             : [newSlot()]);
@@ -58,9 +59,10 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
     if (!name.trim()) { setError('Module name is required'); return; }
     setError(''); setSaving(true);
     const schedule = slots.map((s) => ({ day_of_week: s.day, start_time: s.start, end_time: s.end }));
+    const totalClasses = Number(total) > 0 ? Math.floor(Number(total)) : 30;
     try {
-      if (isEdit) await api.put(`/api/modules/${moduleId}`, { name: name.trim(), schedule });
-      else await api.post('/api/modules', { name: name.trim(), schedule });
+      if (isEdit) await api.put(`/api/modules/${moduleId}`, { name: name.trim(), schedule, totalClasses });
+      else await api.post('/api/modules', { name: name.trim(), schedule, totalClasses });
       navigation.goBack();
     } catch (e) {
       setError((e as Error).message);
@@ -76,6 +78,11 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
       <Text style={styles.label}>Module name</Text>
       <TextInput style={styles.input} placeholder="e.g. SWE201 Cross Platform Development"
         placeholderTextColor={colors.muted} value={name} onChangeText={setName} />
+
+      <Text style={[styles.label, { marginTop: 22 }]}>Total classes this semester</Text>
+      <TextInput style={styles.input} value={total} onChangeText={setTotal}
+        keyboardType="number-pad" placeholder="30" placeholderTextColor={colors.muted} />
+      <Text style={styles.helpText}>Used to show students their absence allowance from the start of term.</Text>
 
       <Text style={[styles.label, { marginTop: 22 }]}>Weekly schedule</Text>
       {slots.map((slot, index) => (
@@ -124,6 +131,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   label: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 8 },
   smallLabel: { fontSize: 13, fontWeight: '600', color: colors.muted, marginBottom: 6 },
+  helpText: { fontSize: 12, color: colors.muted, marginTop: 6 },
   input: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: colors.text },
   slotCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 14, marginBottom: 12 },
   slotHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },

@@ -9,8 +9,8 @@ interface ScheduleInput { day_of_week: string; start_time: string; end_time: str
 function publicUser(u: User) { return { id: u.id, name: u.name, email: u.email, role: u.role }; }
 
 export const moduleService = {
-  createModule(lecturerId: number, name: string, schedule: ScheduleInput[]) {
-    const module = moduleRepository.create(name, lecturerId);
+  createModule(lecturerId: number, name: string, schedule: ScheduleInput[], totalClasses: number) {
+    const module = moduleRepository.create(name, lecturerId, totalClasses);
     schedule.forEach((s) => scheduleRepository.create(module.id, s.day_of_week, s.start_time, s.end_time));
     return { ...module, schedule: scheduleRepository.findByModule(module.id) };
   },
@@ -37,14 +37,12 @@ export const moduleService = {
     return enrolmentRepository.findStudentsByModule(moduleId).map(publicUser);
   },
 
-  // Enrol every student at once (default cohort intake).
   enrolAllStudents(lecturerId: number, moduleId: number) {
     this.assertOwned(lecturerId, moduleId);
     userRepository.findAllStudents().forEach((s) => enrolmentRepository.enrol(moduleId, s.id));
     return enrolmentRepository.findStudentsByModule(moduleId).map(publicUser);
   },
 
-  // Remove a student (e.g. they don't take this elective).
   unenrolStudent(lecturerId: number, moduleId: number, studentId: number) {
     this.assertOwned(lecturerId, moduleId);
     enrolmentRepository.unenrol(moduleId, studentId);
@@ -60,12 +58,12 @@ export const moduleService = {
     return userRepository.findAllStudents().map(publicUser);
   },
 
-  updateModule(lecturerId: number, moduleId: number, name: string, schedule: ScheduleInput[]) {
+  updateModule(lecturerId: number, moduleId: number, name: string, schedule: ScheduleInput[], totalClasses: number) {
     this.assertOwned(lecturerId, moduleId);
-    moduleRepository.update(moduleId, name);
+    moduleRepository.update(moduleId, name, totalClasses);
     scheduleRepository.deleteByModule(moduleId);
     schedule.forEach((s) => scheduleRepository.create(moduleId, s.day_of_week, s.start_time, s.end_time));
-    return { id: moduleId, name, schedule: scheduleRepository.findByModule(moduleId) };
+    return { id: moduleId, name, total_classes: totalClasses, schedule: scheduleRepository.findByModule(moduleId) };
   },
 
   deleteModule(lecturerId: number, moduleId: number) {

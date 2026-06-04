@@ -1,6 +1,4 @@
 // src/config/seed.ts
-// Seeds real cohort data with realistic attendance AND the matching threshold alerts.
-// Run with: npm run seed
 import bcrypt from 'bcryptjs';
 import db from './db';
 import { computeQuota } from '../services/quotaService';
@@ -9,6 +7,7 @@ import { notificationRepository } from '../repositories/NotificationRepository';
 
 const PASSWORD = 'password123';
 const YEAR = 2026;
+const TOTAL_CLASSES = 30; // planned classes per module for the term
 
 const LECTURER = { name: 'Module Lecturer', email: 'lecturer.cst@rub.edu.bt' };
 
@@ -67,7 +66,7 @@ const MODULES = [
   ]},
 ];
 
-const MONTHS: [number, number][] = [[3, 9], [4, 9], [5, 8]]; // 9 (Mar) + 9 (Apr) + 8 (May) = 26 per module
+const MONTHS: [number, number][] = [[3, 9], [4, 9], [5, 8]];
 const TOTAL = STUDENTS.length;
 
 function monthDates(month: number, count: number): string[] {
@@ -80,11 +79,11 @@ function monthDates(month: number, count: number): string[] {
 }
 
 function absencesFor(studentIndex: number, moduleIndex: number): number {
-  const redStudent = (moduleIndex * 7 + 3) % TOTAL;                 // index 3 (Jigme) is red in SWE201
-  if (studentIndex === redStudent) return 6;                       // 20/26 = 76.9% (red, exceptional)
+  const redStudent = (moduleIndex * 7 + 3) % TOTAL;
+  if (studentIndex === redStudent) return 6;
   const yellow = [0, 1, 2].map((k) => (moduleIndex * 4 + 1 + k) % TOTAL);
-  if (yellow.includes(studentIndex)) return 3 + (studentIndex % 2); // 3-4 absences (medical zone)
-  return studentIndex % 3;                                          // 0-2 absences (green: 92-100%)
+  if (yellow.includes(studentIndex)) return 3 + (studentIndex % 2);
+  return studentIndex % 3;
 }
 
 function seed() {
@@ -100,7 +99,7 @@ function seed() {
 
   const hash = bcrypt.hashSync(PASSWORD, 10);
   const insertUser     = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
-  const insertModule   = db.prepare('INSERT INTO modules (name, lecturer_id) VALUES (?, ?)');
+  const insertModule   = db.prepare('INSERT INTO modules (name, lecturer_id, total_classes) VALUES (?, ?, ?)');
   const insertSchedule = db.prepare('INSERT INTO schedules (module_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)');
   const insertEnrol    = db.prepare('INSERT INTO enrolments (module_id, student_id) VALUES (?, ?)');
   const insertSession  = db.prepare('INSERT INTO sessions (module_id, date) VALUES (?, ?)');
@@ -111,13 +110,13 @@ function seed() {
     insertUser.run(name, `${no}.cst@rub.edu.bt`, hash, 'student').lastInsertRowid as number
   );
 
-  const sessionDates = MONTHS.flatMap(([m, c]) => monthDates(m, c)); // 26 dates
+  const sessionDates = MONTHS.flatMap(([m, c]) => monthDates(m, c));
   const held = sessionDates.length;
   let alertsCreated = 0;
 
   db.transaction(() => {
     MODULES.forEach((mod, moduleIndex) => {
-      const moduleId = insertModule.run(mod.name, lecturerId).lastInsertRowid as number;
+      const moduleId = insertModule.run(mod.name, lecturerId, TOTAL_CLASSES).lastInsertRowid as number;
       mod.slots.forEach((s) => insertSchedule.run(moduleId, s.day, s.start, s.end));
       studentIds.forEach((sid) => insertEnrol.run(moduleId, sid));
 
@@ -129,8 +128,7 @@ function seed() {
           insertRecord.run(sessionId, sid, i < absences ? 'absent' : 'present');
         });
 
-        // Generate the same alert the Observer would on a real submission, so seeded data is consistent.
-        const q = computeQuota(held - absences, absences);
+        const q = computeQuota(held - absences, absences, TOTAL_CLASSES);
         const alert = levelFor(q.percentage, q.remainingAbsences);
         if (alert) { notificationRepository.create(sid, moduleId, alert.level, alert.message); alertsCreated++; }
       });

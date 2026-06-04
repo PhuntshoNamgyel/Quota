@@ -16,6 +16,7 @@ export interface Module {
   id: number;
   name: string;
   lecturer_id: number;
+  total_classes: number; // planned classes for the term (drives the absence allowance)
 }
 
 export interface Schedule {
@@ -52,5 +53,6 @@ export interface Notification {
   module_id: number;
   level: string;
   message: string;
+  is_read: number;
   created_at: string;
 }

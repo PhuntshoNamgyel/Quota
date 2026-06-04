@@ -4,12 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "dev": "tsx watch src/server.ts",
-  "build": "tsc",
-  "start": "node dist/server.js",
-  "test": "jest",
-  "seed": "tsx src/config/seed.ts"
-},
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "jest",
+    "seed": "tsx src/config/seed.ts"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

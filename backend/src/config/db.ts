@@ -11,7 +11,6 @@ const db = new Database(dbPath);
 // integrity — this is the Reliability quality attribute (NFR04) in practice.
 db.pragma('foreign_keys = ON');
 
-// Create all six tables if they don't already exist (proposal §11.3).
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY,
@@ -22,9 +21,10 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS modules (
-    id          INTEGER PRIMARY KEY,
-    name        TEXT NOT NULL,
-    lecturer_id INTEGER NOT NULL,
+    id            INTEGER PRIMARY KEY,
+    name          TEXT NOT NULL,
+    lecturer_id   INTEGER NOT NULL,
+    total_classes INTEGER NOT NULL DEFAULT 30,
     FOREIGN KEY (lecturer_id) REFERENCES users(id)
   );
 
@@ -70,6 +70,7 @@ db.exec(`
     module_id  INTEGER NOT NULL,
     level      TEXT NOT NULL,
     message    TEXT NOT NULL,
+    is_read    INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (student_id) REFERENCES users(id),
     FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
@@ -77,5 +78,6 @@ db.exec(`
 `);
 
 try { db.exec(`ALTER TABLE notifications ADD COLUMN is_read INTEGER NOT NULL DEFAULT 0`); } catch { /* already added */ }
+try { db.exec(`ALTER TABLE modules ADD COLUMN total_classes INTEGER NOT NULL DEFAULT 30`); } catch { /* already added */ }
 
 export default db;
