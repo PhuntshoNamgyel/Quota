@@ -10,7 +10,7 @@ import { RootStackParams } from '../../navigation/types';
 type Props = NativeStackScreenProps<RootStackParams, 'Reports'>;
 
 interface Quota { percentage: number; colour: 'green' | 'yellow' | 'red'; attended: number; held: number; }
-interface StudentRow { student: { id: number; name: string }; quota: Quota; }
+interface StudentRow { student: { id: number; name: string; no: string }; quota: Quota; }
 interface Report {
   module: { id: number; name: string };
   totalSessions: number;
@@ -41,7 +41,7 @@ export default function ReportsScreen({ route, navigation }: Props) {
     <View style={styles.row}>
       <View style={{ flex: 1 }}>
         <Text style={styles.name}>{row.student.name}</Text>
-        <Text style={styles.sub}>{row.quota.attended}/{row.quota.held} attended</Text>
+        <Text style={styles.sub}>{row.student.no}  ·  {row.quota.attended}/{row.quota.held} attended</Text>
       </View>
       <View style={[styles.pill, { backgroundColor: colourFor(row.quota.colour) }]}>
         <Text style={styles.pillText}>{row.quota.percentage}%</Text>

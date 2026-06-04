@@ -4,8 +4,9 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-nativ
 import { useFocusEffect } from '@react-navigation/native';
 import { api } from '../../api/client';
 import { colors } from '../../theme';
+import { formatDateTime } from '../../format';
 
-interface NotificationRow { id: number; level: string; message: string; created_at: string; }
+interface NotificationRow { id: number; level: string; message: string; created_at: string; module_name: string; }
 
 const colourFor = (level: string) => (level === 'critical' ? colors.red : level === 'breach' ? colors.yellow : colors.primary);
 
@@ -32,9 +33,10 @@ export default function StudentNotificationsScreen() {
       ListEmptyComponent={<Text style={styles.muted}>No alerts. You're on track.</Text>}
       renderItem={({ item }) => (
         <View style={[styles.card, { borderLeftColor: colourFor(item.level) }]}>
+          <Text style={styles.module}>{item.module_name}</Text>
           <Text style={[styles.level, { color: colourFor(item.level) }]}>{item.level.toUpperCase()}</Text>
           <Text style={styles.message}>{item.message}</Text>
-          <Text style={styles.date}>{item.created_at}</Text>
+          <Text style={styles.date}>{formatDateTime(item.created_at)}</Text>
         </View>
       )}
     />
@@ -45,8 +47,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
   card: { backgroundColor: colors.card, borderRadius: 12, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: colors.border, borderLeftWidth: 6 },
-  level: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5 },
-  message: { fontSize: 15, color: colors.text, marginTop: 6 },
+  module: { fontSize: 15, fontWeight: '700', color: colors.text },
+  level: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, marginTop: 4 },
+  message: { fontSize: 14, color: colors.text, marginTop: 6 },
   date: { fontSize: 12, color: colors.muted, marginTop: 8 },
   muted: { color: colors.muted, textAlign: 'center', marginTop: 30 },
 });

@@ -5,14 +5,16 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { api } from '../../api/client';
 import { colors } from '../../theme';
+import { formatDate } from '../../format';
 import { RootStackParams } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParams, 'MarkAttendance'>;
 type Status = 'present' | 'absent';
-interface Row { id: number; name: string; status: Status; }
+interface Row { id: number; name: string; no: string; status: Status; }
 interface ApiStudent { id: number; name: string; email: string; status: Status; }
 
 const today = () => new Date().toISOString().slice(0, 10);
+const studentNo = (email: string) => email.split('.')[0];
 
 export default function MarkAttendanceScreen({ route, navigation }: Props) {
   const { moduleId, moduleName, sessionId } = route.params;
@@ -30,23 +32,23 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
 
   const load = useCallback(async () => {
     if (editing) {
-      const data = await api.get(`/api/sessions/${sessionId}`); // existing statuses (FR12)
-      setRows(data.students.map((s: ApiStudent) => ({ id: s.id, name: s.name, status: s.status })));
+      const data = await api.get(`/api/sessions/${sessionId}`);
+      setRows(data.students.map((s: ApiStudent) => ({ id: s.id, name: s.name, no: studentNo(s.email), status: s.status })));
       setDate(data.session.date);
     } else {
-      const roster = await api.get(`/api/modules/${moduleId}/roster`); // all present by default (FR07/FR09)
-      setRows(roster.map((s: ApiStudent) => ({ id: s.id, name: s.name, status: 'present' as Status })));
+      const roster = await api.get(`/api/modules/${moduleId}/roster`);
+      setRows(roster.map((s: ApiStudent) => ({ id: s.id, name: s.name, no: studentNo(s.email), status: 'present' as Status })));
     }
     setLoading(false);
   }, [editing, sessionId, moduleId]);
 
   useFocusEffect(useCallback(() => { setLoading(true); load(); }, [load]));
 
-  function toggle(id: number) { // FR10
+  function toggle(id: number) {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status: r.status === 'present' ? 'absent' : 'present' } : r)));
   }
 
-  async function submit() { // FR11 (new) / FR12 (edit)
+  async function submit() {
     setSaving(true);
     const absentStudentIds = rows.filter((r) => r.status === 'absent').map((r) => r.id);
     try {
@@ -60,7 +62,8 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
 
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
-  const filtered = rows.filter((r) => r.name.toLowerCase().includes(query.toLowerCase())); // FR08
+  const q = query.toLowerCase();
+  const filtered = rows.filter((r) => r.name.toLowerCase().includes(q) || r.no.includes(q)); // FR08 (name or number)
   const presentCount = rows.filter((r) => r.status === 'present').length;
   const absentCount = rows.length - presentCount;
 
@@ -69,9 +72,9 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
       <View style={styles.top}>
         <Text style={styles.module}>{moduleName}</Text>
         <Text style={styles.summary}>
-          {date}   ·   <Text style={{ color: colors.green }}>{presentCount} present</Text>   ·   <Text style={{ color: colors.red }}>{absentCount} absent</Text>
+          {formatDate(date)}   ·   <Text style={{ color: colors.green }}>{presentCount} present</Text>   ·   <Text style={{ color: colors.red }}>{absentCount} absent</Text>
         </Text>
-        <TextInput style={styles.search} placeholder="Search student by name" placeholderTextColor={colors.muted}
+        <TextInput style={styles.search} placeholder="Search by name or number" placeholderTextColor={colors.muted}
           value={query} onChangeText={setQuery} autoCapitalize="none" />
         <Text style={styles.hint}>Everyone is Present by default — tap a student to mark Absent.</Text>
       </View>
@@ -85,7 +88,10 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
           const absent = item.status === 'absent';
           return (
             <TouchableOpacity style={[styles.row, absent && styles.rowAbsent]} onPress={() => toggle(item.id)}>
-              <Text style={styles.name}>{item.name}</Text>
+              <View style={{ flex: 1, paddingRight: 10 }}>
+                <Text style={styles.name}>{item.name}</Text>
+                <Text style={styles.no}>{item.no}</Text>
+              </View>
               <View style={[styles.pill, { backgroundColor: absent ? colors.red : colors.green }]}>
                 <Text style={styles.pillText}>{absent ? 'Absent' : 'Present'}</Text>
               </View>
@@ -109,9 +115,10 @@ const styles = StyleSheet.create({
   summary: { fontSize: 13, color: colors.muted, marginTop: 4, marginBottom: 12 },
   search: { backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
   hint: { fontSize: 12, color: colors.muted, marginTop: 8, marginBottom: 4 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 16, marginBottom: 10, borderWidth: 1, borderColor: colors.border },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.border },
   rowAbsent: { borderColor: colors.red, backgroundColor: '#fef2f2' },
   name: { fontSize: 16, color: colors.text, fontWeight: '500' },
+  no: { fontSize: 12, color: colors.muted, marginTop: 2, fontVariant: ['tabular-nums'] },
   pill: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 },
   pillText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   submit: { backgroundColor: colors.primary, margin: 16, borderRadius: 12, paddingVertical: 16, alignItems: 'center' },

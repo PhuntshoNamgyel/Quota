@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { api } from '../../api/client';
 import { colors } from '../../theme';
+import { formatDate } from '../../format';
 import { RootStackParams } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParams, 'StudentHistory'>;
@@ -38,7 +39,7 @@ export default function StudentHistoryScreen({ route, navigation }: Props) {
         const absent = item.status === 'absent';
         return (
           <View style={styles.row}>
-            <Text style={styles.date}>{item.date}</Text>
+            <Text style={styles.date}>{formatDate(item.date)}</Text>
             <View style={[styles.pill, { backgroundColor: absent ? colors.red : colors.green }]}>
               <Text style={styles.pillText}>{absent ? 'Absent' : 'Present'}</Text>
             </View>

@@ -12,9 +12,14 @@ export class NotificationRepository {
     db.prepare('INSERT INTO notifications (student_id, module_id, level, message) VALUES (?, ?, ?, ?)')
       .run(studentId, moduleId, level, message);
   }
-  findByStudent(studentId: number): Notification[] {
-    return db.prepare('SELECT * FROM notifications WHERE student_id = ? ORDER BY created_at DESC, id DESC')
-      .all(studentId) as Notification[];
+  findByStudent(studentId: number) {
+    return db.prepare(`
+      SELECT n.*, m.name AS module_name
+      FROM notifications n
+      JOIN modules m ON m.id = n.module_id
+      WHERE n.student_id = ?
+      ORDER BY n.created_at DESC, n.id DESC
+    `).all(studentId) as (Notification & { module_name: string })[];
   }
   countUnread(studentId: number): number {
     const row = db.prepare('SELECT COUNT(*) AS n FROM notifications WHERE student_id = ? AND is_read = 0').get(studentId) as { n: number };
