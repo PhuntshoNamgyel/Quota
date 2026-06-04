@@ -34,6 +34,17 @@ export const moduleController = {
     } catch (err) { res.status(404).json({ error: (err as Error).message }); }
   },
 
+  update(req: Request, res: Response): void {
+    const { name, schedule } = req.body ?? {};
+    if (!name || !Array.isArray(schedule) || schedule.length === 0) {
+      res.status(400).json({ error: 'name and a non-empty schedule array are required' });
+      return;
+    }
+    try {
+      res.json(moduleService.updateModule(req.user!.userId, Number(req.params.id), name, schedule));
+    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
+  },
+
   remove(req: Request, res: Response): void {
     try {
       moduleService.deleteModule(req.user!.userId, Number(req.params.id));

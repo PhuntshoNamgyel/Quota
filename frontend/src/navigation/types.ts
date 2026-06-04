@@ -2,7 +2,7 @@
 export type RootStackParams = {
   Login: undefined;
   ModuleList: undefined;
-  CreateModule: undefined;
+  CreateModule: { moduleId?: number } | undefined;
   ModuleDetail: { moduleId: number; moduleName: string };
   MarkAttendance: { moduleId: number; moduleName: string; sessionId?: number };
   Reports: { moduleId: number; moduleName: string };

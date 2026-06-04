@@ -13,6 +13,7 @@ router.get('/', moduleController.list);
 router.get('/students/all', moduleController.allStudents);
 router.post('/:id/enrolments', moduleController.enrol);
 router.get('/:id/students', moduleController.students);
+router.put('/:id', moduleController.update);                  // edit module
 router.delete('/:id', moduleController.remove);               // delete module
 router.get('/:id/roster', attendanceController.roster);
 router.post('/:id/sessions', attendanceController.submit);

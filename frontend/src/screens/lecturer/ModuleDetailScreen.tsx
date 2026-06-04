@@ -11,7 +11,7 @@ type Props = NativeStackScreenProps<RootStackParams, 'ModuleDetail'>;
 interface Student { id: number; name: string; email: string; }
 interface SessionRow { id: number; date: string; }
 
-const studentNo = (email: string) => email.split('.')[0]; // "02240354.cst@rub.edu.bt" -> "02240354"
+const studentNo = (email: string) => email.split('.')[0];
 
 export default function ModuleDetailScreen({ route, navigation }: Props) {
   const { moduleId, moduleName } = route.params;
@@ -105,6 +105,9 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
         </>
       )}
 
+      <TouchableOpacity style={styles.editBtn} onPress={() => navigation.navigate('CreateModule', { moduleId })}>
+        <Text style={styles.editBtnText}>Edit module</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.deleteBtn} onPress={confirmDelete}>
         <Text style={styles.deleteText}>Delete module</Text>
       </TouchableOpacity>
@@ -131,6 +134,8 @@ const styles = StyleSheet.create({
   addLabel: { color: colors.primary, fontWeight: '700' },
   editLabel: { color: colors.muted, fontWeight: '600' },
   muted: { color: colors.muted, marginTop: 8 },
-  deleteBtn: { marginTop: 28, borderWidth: 1, borderColor: colors.red, borderRadius: 12, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.card },
+  editBtn: { marginTop: 28, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.card },
+  editBtnText: { color: colors.primary, fontWeight: '700' },
+  deleteBtn: { marginTop: 12, borderWidth: 1, borderColor: colors.red, borderRadius: 12, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.card },
   deleteText: { color: colors.red, fontWeight: '700' },
 });

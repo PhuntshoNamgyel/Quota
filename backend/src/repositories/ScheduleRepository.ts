@@ -1,5 +1,4 @@
 // src/repositories/ScheduleRepository.ts
-// Repository Pattern: all SQL for the `schedules` table.
 import db from '../config/db';
 import { Schedule } from '../models';
 
@@ -12,6 +11,9 @@ export class ScheduleRepository {
   }
   findByModule(moduleId: number): Schedule[] {
     return db.prepare('SELECT * FROM schedules WHERE module_id = ?').all(moduleId) as Schedule[];
+  }
+  deleteByModule(moduleId: number): void {
+    db.prepare('DELETE FROM schedules WHERE module_id = ?').run(moduleId);
   }
 }
 export const scheduleRepository = new ScheduleRepository();

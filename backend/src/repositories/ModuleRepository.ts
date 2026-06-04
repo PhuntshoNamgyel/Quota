@@ -13,6 +13,9 @@ export class ModuleRepository {
   findByLecturer(lecturerId: number): Module[] {
     return db.prepare('SELECT * FROM modules WHERE lecturer_id = ? ORDER BY id').all(lecturerId) as Module[];
   }
+  update(id: number, name: string): void {
+    db.prepare('UPDATE modules SET name = ? WHERE id = ?').run(name, id);
+  }
   delete(id: number): void {
     // FK cascades remove the module's schedules, enrolments, sessions and attendance records.
     db.prepare('DELETE FROM modules WHERE id = ?').run(id);

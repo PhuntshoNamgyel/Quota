@@ -19,7 +19,7 @@ export const moduleService = {
     return moduleRepository.findByLecturer(lecturerId).map((m) => ({
       ...m,
       schedule: scheduleRepository.findByModule(m.id),
-      studentCount: enrolmentRepository.findStudentsByModule(m.id).length, // for the card
+      studentCount: enrolmentRepository.findStudentsByModule(m.id).length,
     }));
   },
 
@@ -44,6 +44,15 @@ export const moduleService = {
 
   listAllStudents() {
     return userRepository.findAllStudents().map(publicUser);
+  },
+
+  // Rename and reschedule: replace the schedule rows with the new set.
+  updateModule(lecturerId: number, moduleId: number, name: string, schedule: ScheduleInput[]) {
+    this.assertOwned(lecturerId, moduleId);
+    moduleRepository.update(moduleId, name);
+    scheduleRepository.deleteByModule(moduleId);
+    schedule.forEach((s) => scheduleRepository.create(moduleId, s.day_of_week, s.start_time, s.end_time));
+    return { id: moduleId, name, schedule: scheduleRepository.findByModule(moduleId) };
   },
 
   deleteModule(lecturerId: number, moduleId: number) {
