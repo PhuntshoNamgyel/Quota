@@ -11,10 +11,12 @@ router.use(authenticate, authorize('lecturer'));
 router.post('/', moduleController.create);
 router.get('/', moduleController.list);
 router.get('/students/all', moduleController.allStudents);
-router.post('/:id/enrolments', moduleController.enrol);
+router.post('/:id/enrolments/all', moduleController.enrolAll);          // enrol everyone
+router.post('/:id/enrolments', moduleController.enrol);                 // enrol one
+router.delete('/:id/enrolments/:studentId', moduleController.unenrol);  // remove one
 router.get('/:id/students', moduleController.students);
-router.put('/:id', moduleController.update);                  // edit module
-router.delete('/:id', moduleController.remove);               // delete module
+router.put('/:id', moduleController.update);
+router.delete('/:id', moduleController.remove);
 router.get('/:id/roster', attendanceController.roster);
 router.post('/:id/sessions', attendanceController.submit);
 router.get('/:id/sessions', attendanceController.listSessions);

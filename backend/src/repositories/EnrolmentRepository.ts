@@ -1,13 +1,13 @@
 // src/repositories/EnrolmentRepository.ts
-// Repository Pattern: all SQL for the `enrolments` table (with joins to users/modules).
 import db from '../config/db';
 import { User, Module } from '../models';
 
 export class EnrolmentRepository {
-  // INSERT OR IGNORE relies on the UNIQUE(module_id, student_id) constraint:
-  // re-enrolling the same student is a harmless no-op.
   enrol(moduleId: number, studentId: number): void {
     db.prepare('INSERT OR IGNORE INTO enrolments (module_id, student_id) VALUES (?, ?)').run(moduleId, studentId);
+  }
+  unenrol(moduleId: number, studentId: number): void {
+    db.prepare('DELETE FROM enrolments WHERE module_id = ? AND student_id = ?').run(moduleId, studentId);
   }
   findStudentsByModule(moduleId: number): User[] {
     return db.prepare(`

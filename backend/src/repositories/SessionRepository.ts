@@ -1,5 +1,4 @@
 // src/repositories/SessionRepository.ts
-// Repository Pattern: all SQL for the `sessions` table.
 import db from '../config/db';
 import { Session } from '../models';
 
@@ -17,6 +16,9 @@ export class SessionRepository {
   countByModule(moduleId: number): number {
     const row = db.prepare('SELECT COUNT(*) AS n FROM sessions WHERE module_id = ?').get(moduleId) as { n: number };
     return row.n;
+  }
+  delete(id: number): void {
+    db.prepare('DELETE FROM sessions WHERE id = ?').run(id); // attendance_records cascade via FK
   }
 }
 export const sessionRepository = new SessionRepository();

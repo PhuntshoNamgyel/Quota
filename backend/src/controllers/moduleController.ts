@@ -28,6 +28,18 @@ export const moduleController = {
     } catch (err) { res.status(404).json({ error: (err as Error).message }); }
   },
 
+  enrolAll(req: Request, res: Response): void {
+    try {
+      res.status(201).json(moduleService.enrolAllStudents(req.user!.userId, Number(req.params.id)));
+    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
+  },
+
+  unenrol(req: Request, res: Response): void {
+    try {
+      res.json(moduleService.unenrolStudent(req.user!.userId, Number(req.params.id), Number(req.params.studentId)));
+    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
+  },
+
   students(req: Request, res: Response): void {
     try {
       res.json(moduleService.listEnrolledStudents(req.user!.userId, Number(req.params.id)));

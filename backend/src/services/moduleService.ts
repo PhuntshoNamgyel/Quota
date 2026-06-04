@@ -37,6 +37,20 @@ export const moduleService = {
     return enrolmentRepository.findStudentsByModule(moduleId).map(publicUser);
   },
 
+  // Enrol every student at once (default cohort intake).
+  enrolAllStudents(lecturerId: number, moduleId: number) {
+    this.assertOwned(lecturerId, moduleId);
+    userRepository.findAllStudents().forEach((s) => enrolmentRepository.enrol(moduleId, s.id));
+    return enrolmentRepository.findStudentsByModule(moduleId).map(publicUser);
+  },
+
+  // Remove a student (e.g. they don't take this elective).
+  unenrolStudent(lecturerId: number, moduleId: number, studentId: number) {
+    this.assertOwned(lecturerId, moduleId);
+    enrolmentRepository.unenrol(moduleId, studentId);
+    return enrolmentRepository.findStudentsByModule(moduleId).map(publicUser);
+  },
+
   listEnrolledStudents(lecturerId: number, moduleId: number) {
     this.assertOwned(lecturerId, moduleId);
     return enrolmentRepository.findStudentsByModule(moduleId).map(publicUser);
@@ -46,7 +60,6 @@ export const moduleService = {
     return userRepository.findAllStudents().map(publicUser);
   },
 
-  // Rename and reschedule: replace the schedule rows with the new set.
   updateModule(lecturerId: number, moduleId: number, name: string, schedule: ScheduleInput[]) {
     this.assertOwned(lecturerId, moduleId);
     moduleRepository.update(moduleId, name);

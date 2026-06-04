@@ -1,5 +1,4 @@
 // src/controllers/attendanceController.ts
-// MVC Controller: HTTP in, attendanceService out.
 import { Request, Response } from 'express';
 import { attendanceService } from '../services/attendanceService';
 
@@ -33,6 +32,12 @@ export const attendanceController = {
     const { absentStudentIds } = req.body ?? {};
     try {
       res.json(attendanceService.editSession(req.user!.userId, Number(req.params.sessionId), absentStudentIds ?? []));
+    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
+  },
+
+  removeSession(req: Request, res: Response): void {
+    try {
+      res.json(attendanceService.deleteSession(req.user!.userId, Number(req.params.sessionId)));
     } catch (err) { res.status(404).json({ error: (err as Error).message }); }
   },
 };

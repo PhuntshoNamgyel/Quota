@@ -1,5 +1,4 @@
 // src/services/attendanceService.ts
-// Business Logic layer: opening sessions, default-present marking, submission, and edits.
 import { quotaService } from './quotaService';
 import { attendanceSubject } from '../observers';
 import { sessionRepository } from '../repositories/SessionRepository';
@@ -12,7 +11,6 @@ function publicStudent(u: User) {
   return { id: u.id, name: u.name, email: u.email };
 }
 
-// After attendance changes, recompute each student's quota and broadcast it (Observer).
 function fireQuotaEvents(moduleId: number, enrolled: User[]) {
   for (const s of enrolled) {
     const q = quotaService.calculate(moduleId, s.id);
@@ -58,6 +56,16 @@ export const attendanceService = {
     attendanceRepository.saveMany(buildRecords(sessionId, enrolled, absentStudentIds));
     fireQuotaEvents(session.module_id, enrolled);
     return { session, records: attendanceRepository.findBySession(sessionId) };
+  },
+
+  // Delete an accidentally-created or invalid session, then recompute quotas.
+  deleteSession(lecturerId: number, sessionId: number) {
+    const session = sessionRepository.findById(sessionId);
+    if (!session) throw new Error('Session not found');
+    moduleService.assertOwned(lecturerId, session.module_id);
+    sessionRepository.delete(sessionId);
+    fireQuotaEvents(session.module_id, enrolmentRepository.findStudentsByModule(session.module_id));
+    return { deleted: true };
   },
 
   getSession(lecturerId: number, sessionId: number) {
