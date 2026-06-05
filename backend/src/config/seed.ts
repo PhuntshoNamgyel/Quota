@@ -5,7 +5,7 @@ import { computeQuota } from '../services/quotaService';
 import { levelFor } from '../observers/NotificationObserver';
 import { notificationRepository } from '../repositories/NotificationRepository';
 
-const PASSWORD = 'password123';
+const LECTURER_PASSWORD = 'Lecturer123';
 const YEAR = 2026;
 const TOTAL_CLASSES = 30;
 
@@ -92,7 +92,7 @@ function seed() {
     DELETE FROM users;
   `);
 
-  const hash = bcrypt.hashSync(PASSWORD, 10);
+  const lecturerHash = bcrypt.hashSync(LECTURER_PASSWORD, 10);
   const insertUser     = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
   const insertModule   = db.prepare('INSERT INTO modules (name, lecturer_id, total_classes) VALUES (?, ?, ?)');
   const insertSchedule = db.prepare('INSERT INTO schedules (module_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)');
@@ -100,10 +100,13 @@ function seed() {
   const insertSession  = db.prepare('INSERT INTO sessions (module_id, date) VALUES (?, ?)');
   const insertRecord   = db.prepare('INSERT INTO attendance_records (session_id, student_id, status) VALUES (?, ?, ?)');
 
-  const lecturerId = insertUser.run(LECTURER.name, LECTURER.email, hash, 'lecturer').lastInsertRowid as number;
-  const studentIds = STUDENTS.map(([no, name]) =>
-    insertUser.run(name, `${no}.cst@rub.edu.bt`, hash, 'student').lastInsertRowid as number
-  );
+  const lecturerId = insertUser.run(LECTURER.name, LECTURER.email, lecturerHash, 'lecturer').lastInsertRowid as number;
+
+  // Each student's initial password is their student number
+  const studentIds = STUDENTS.map(([no, name]) => {
+    const studentHash = bcrypt.hashSync(no, 10);
+    return insertUser.run(name, `${no}.cst@rub.edu.bt`, studentHash, 'student').lastInsertRowid as number;
+  });
 
   const sessionDates = MONTHS.flatMap(([m, c]) => monthDates(m, c));
   const held = sessionDates.length;

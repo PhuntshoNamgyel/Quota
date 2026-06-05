@@ -1,8 +1,9 @@
 // src/controllers/authController.ts
-// MVC Controller: translates HTTP requests into service calls and shapes responses.
 import { Request, Response } from 'express';
 import { authService } from '../services/authService';
-import { Role } from '../models';
+
+// At least 8 characters, one uppercase, one lowercase, one digit
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 export const authController = {
   login(req: Request, res: Response): void {
@@ -18,18 +19,23 @@ export const authController = {
     }
   },
 
-  register(req: Request, res: Response): void {
-    const { name, email, password, role } = req.body ?? {};
-    if (!name || !email || !password || !role) {
-      res.status(400).json({ error: 'name, email, password, and role are required' });
+  changePassword(req: Request, res: Response): void {
+    const { currentPassword, newPassword } = req.body ?? {};
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: 'currentPassword and newPassword are required' });
       return;
     }
-    if (role !== 'lecturer' && role !== 'student') {
-      res.status(400).json({ error: 'role must be lecturer or student' });
+    if (!PASSWORD_REGEX.test(newPassword)) {
+      res.status(400).json({ error: 'New password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number' });
+      return;
+    }
+    if (currentPassword === newPassword) {
+      res.status(400).json({ error: 'New password must be different from current password' });
       return;
     }
     try {
-      res.status(201).json(authService.register(name, email, password, role as Role));
+      authService.changePassword(req.user!.userId, currentPassword, newPassword);
+      res.json({ success: true });
     } catch (err) {
       res.status(400).json({ error: (err as Error).message });
     }

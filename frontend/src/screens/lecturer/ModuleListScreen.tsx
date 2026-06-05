@@ -13,7 +13,7 @@ interface ScheduleRow { day_of_week: string; start_time: string; end_time: strin
 interface ModuleItem { id: number; name: string; schedule: ScheduleRow[]; studentCount: number; }
 
 const ACCENTS = ['#2563eb', '#7c3aed', '#0891b2', '#ca8a04', '#dc2626', '#16a34a'];
-const TODAY = new Date().toLocaleDateString('en-US', { weekday: 'long' }); // e.g. "Tuesday"
+const TODAY = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
 export default function ModuleListScreen({ navigation }: Props) {
   const { logout } = useAuth();
@@ -37,7 +37,14 @@ export default function ModuleListScreen({ navigation }: Props) {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity onPress={logout}><Text style={styles.headerBtn}>Logout</Text></TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 18, alignItems: 'center' }}>
+          <TouchableOpacity onPress={() => navigation.navigate('ChangePassword')}>
+            <Text style={styles.headerBtn}>Password</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={logout}>
+            <Text style={styles.headerBtn}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       ),
     });
   }, [navigation, logout]);

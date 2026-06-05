@@ -16,16 +16,16 @@ export default function LoginScreen() {
   async function handleLogin() {
     setError('');
     try {
-      await login(email.trim(), password); // role-based routing happens automatically once user is set
+      await login(email.trim(), password);
     } catch (e) {
       setError((e as Error).message);
     }
   }
 
-  // Convenience for testing/demo — prefills a seeded account.
+  // Prefills a seeded demo account for quick presentation access
   function quickFill(role: 'lecturer' | 'student') {
     setEmail(role === 'lecturer' ? 'lecturer.cst@rub.edu.bt' : '02240354.cst@rub.edu.bt');
-    setPassword('password123');
+    setPassword(role === 'lecturer' ? 'Lecturer123' : '02240354');
   }
 
   return (

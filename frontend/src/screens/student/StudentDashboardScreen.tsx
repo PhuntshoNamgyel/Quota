@@ -56,7 +56,12 @@ export default function StudentDashboardScreen({ navigation }: Props) {
               )}
             </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={logout}><Text style={styles.headerBtn}>Logout</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('ChangePassword')}>
+            <Text style={styles.headerBtn}>Password</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={logout}>
+            <Text style={styles.headerBtn}>Logout</Text>
+          </TouchableOpacity>
         </View>
       ),
     });

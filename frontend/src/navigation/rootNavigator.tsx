@@ -15,6 +15,7 @@ import ReportsScreen from '../screens/lecturer/ReportsScreen';
 import StudentDashboardScreen from '../screens/student/StudentDashboardScreen';
 import StudentHistoryScreen from '../screens/student/StudentHistoryScreen';
 import StudentNotificationsScreen from '../screens/student/StudentNotificationsScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 
 const Stack = createNativeStackNavigator<RootStackParams>();
 
@@ -27,7 +28,6 @@ const screenOptions = {
 export default function RootNavigator() {
   const { user, restoring } = useAuth();
 
-  // While we check storage for a saved session, show a spinner instead of flashing the login screen.
   if (restoring) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
@@ -48,12 +48,14 @@ export default function RootNavigator() {
             <Stack.Screen name="ModuleDetail" component={ModuleDetailScreen} />
             <Stack.Screen name="MarkAttendance" component={MarkAttendanceScreen} />
             <Stack.Screen name="Reports" component={ReportsScreen} />
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
           </>
         ) : (
           <>
             <Stack.Screen name="StudentDashboard" component={StudentDashboardScreen} options={{ title: 'My Attendance' }} />
             <Stack.Screen name="StudentHistory" component={StudentHistoryScreen} />
             <Stack.Screen name="StudentNotifications" component={StudentNotificationsScreen} options={{ title: 'Alerts' }} />
+            <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ title: 'Change Password' }} />
           </>
         )}
       </Stack.Navigator>

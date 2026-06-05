@@ -18,7 +18,6 @@ export interface AuthResult {
   user: { id: number; name: string; email: string; role: Role };
 }
 
-// Never send the password hash back to the client.
 function toPublic(user: User): AuthResult['user'] {
   return { id: user.id, name: user.name, email: user.email, role: user.role };
 }
@@ -32,12 +31,12 @@ export const authService = {
     return { token: signToken(user), user: toPublic(user) };
   },
 
-  register(name: string, email: string, password: string, role: Role): AuthResult {
-    if (userRepository.findByEmail(email)) {
-      throw new Error('Email already registered');
+  changePassword(userId: number, currentPassword: string, newPassword: string): void {
+    const user = userRepository.findById(userId);
+    if (!user || !bcrypt.compareSync(currentPassword, user.password_hash)) {
+      throw new Error('Current password is incorrect');
     }
-    const hash = bcrypt.hashSync(password, 10);
-    const user = userRepository.create(name, email, hash, role);
-    return { token: signToken(user), user: toPublic(user) };
+    const hash = bcrypt.hashSync(newPassword, 10);
+    userRepository.updatePassword(userId, hash);
   },
 };

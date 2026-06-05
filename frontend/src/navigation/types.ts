@@ -9,4 +9,5 @@ export type RootStackParams = {
   StudentDashboard: undefined;
   StudentHistory: { moduleId: number; moduleName: string };
   StudentNotifications: undefined;
+  ChangePassword: undefined;
 };
