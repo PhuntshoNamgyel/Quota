@@ -7,7 +7,7 @@ import { notificationRepository } from '../repositories/NotificationRepository';
 
 const PASSWORD = 'password123';
 const YEAR = 2026;
-const TOTAL_CLASSES = 30; // planned classes per module for the term
+const TOTAL_CLASSES = 30;
 
 const LECTURER = { name: 'Module Lecturer', email: 'lecturer.cst@rub.edu.bt' };
 
@@ -44,10 +44,10 @@ const STUDENTS: [string, string][] = [
 const MODULES = [
   { name: 'SWE201 Cross Platform Development', slots: [
     { day: 'Tuesday', start: '10:15', end: '12:15' },
-    { day: 'Wednesday', start: '11:15', end: '1:15'},
+    { day: 'Wednesday', start: '11:15', end: '1:15' },
   ]},
   { name: 'SDA202 System Design & Solution Architecture', slots: [
-    { day: 'Tuesday', start: '1:15', end: '3:15'},
+    { day: 'Tuesday', start: '1:15', end: '3:15' },
     { day: 'Wednesday', start: '09:00', end: '11:00' },
   ]},
   { name: 'CTE205 Operating Systems', slots: [
@@ -62,12 +62,11 @@ const MODULES = [
   ]},
   { name: 'DSO101 Continuous Integration & Continuous Deployment', slots: [
     { day: 'Monday', start: '09:00', end: '11:15' },
-    { day: 'Thursday', start: '1:15', end: '3:15'},
+    { day: 'Thursday', start: '1:15', end: '3:15' },
   ]},
 ];
 
 const MONTHS: [number, number][] = [[3, 9], [4, 9], [5, 8]];
-const TOTAL = STUDENTS.length;
 
 function monthDates(month: number, count: number): string[] {
   const daysInMonth = new Date(YEAR, month, 0).getDate();
@@ -78,12 +77,8 @@ function monthDates(month: number, count: number): string[] {
   });
 }
 
-function absencesFor(studentIndex: number, moduleIndex: number): number {
-  const redStudent = (moduleIndex * 7 + 3) % TOTAL;
-  if (studentIndex === redStudent) return 6;
-  const yellow = [0, 1, 2].map((k) => (moduleIndex * 4 + 1 + k) % TOTAL);
-  if (yellow.includes(studentIndex)) return 3 + (studentIndex % 2);
-  return studentIndex % 3;
+function absencesFor(_studentIndex: number, _moduleIndex: number): number {
+  return 0;
 }
 
 function seed() {
@@ -129,7 +124,7 @@ function seed() {
         });
 
         const q = computeQuota(held - absences, absences, TOTAL_CLASSES);
-        const alert = levelFor(q.percentage, q.remainingAbsences);
+        const alert = levelFor(absences, q.maxAbsencesAllowed, held, q.percentage);
         if (alert) { notificationRepository.create(sid, moduleId, alert.level, alert.message); alertsCreated++; }
       });
     });

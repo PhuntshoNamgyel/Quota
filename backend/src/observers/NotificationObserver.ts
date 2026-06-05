@@ -2,25 +2,26 @@
 import { AttendanceObserver, QuotaEvent } from './AttendanceSubject';
 import { notificationRepository } from '../repositories/NotificationRepository';
 
-export function levelFor(percentage: number, remaining: number): { level: string; message: string } | null {
-  if (percentage < 80) {
-    return { level: 'critical', message: 'Below 80% — non-compliant. No medical exemption applies.' };           // FR22b
-  }
+const MIN_SESSIONS_FOR_ALERT = 10;
+
+export function levelFor(missed: number, maxAbsencesAllowed: number, held: number, percentage: number): { level: string; message: string } | null {
+  if (missed === 0) return null;
+  if (held < MIN_SESSIONS_FOR_ALERT) return null;
   if (percentage < 90) {
-    return { level: 'breach', message: 'Below 90% — medical-exemption zone. No absence allowance left.' };        // FR22
+    return { level: 'critical', message: 'You have used more than your allowed absences — your attendance is non-compliant and requires genuine reasons.' };
   }
-  if (percentage < 95) {
-    const msg = remaining > 0
-      ? `Nearing the limit — you can miss ${remaining} more ${remaining === 1 ? 'class' : 'classes'} before dropping below 90%.`
-      : 'No absences left — missing any class drops you below 90%.';
-    return { level: 'warning', message: msg };                                                                     // FR21
+  if (maxAbsencesAllowed === 0) {
+    return { level: 'breach', message: 'You cannot miss any more classes — 90% attendance is mandatory.' };
+  }
+  if (maxAbsencesAllowed === 1) {
+    return { level: 'warning', message: 'You can miss only 1 more class — 90% attendance is mandatory.' };
   }
   return null;
 }
 
 export class NotificationObserver implements AttendanceObserver {
   onQuotaEvaluated(event: QuotaEvent): void {
-    const result = levelFor(event.percentage, event.remainingAbsences);
+    const result = levelFor(event.missed, event.maxAbsencesAllowed, event.held, event.percentage);
     if (!result) return;
     if (notificationRepository.exists(event.studentId, event.moduleId, result.level)) return;
     notificationRepository.create(event.studentId, event.moduleId, result.level, result.message);

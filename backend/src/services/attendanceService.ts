@@ -16,7 +16,7 @@ function fireQuotaEvents(moduleId: number, enrolled: User[]) {
     const q = quotaService.calculate(moduleId, s.id);
     attendanceSubject.notify({
       studentId: s.id, moduleId, percentage: q.percentage, status: q.status,
-      remainingAbsences: q.remainingAbsences,
+      missed: q.missed, maxAbsencesAllowed: q.maxAbsencesAllowed, held: q.held,
     });
   }
 }
@@ -58,7 +58,6 @@ export const attendanceService = {
     return { session, records: attendanceRepository.findBySession(sessionId) };
   },
 
-  // Delete an accidentally-created or invalid session, then recompute quotas.
   deleteSession(lecturerId: number, sessionId: number) {
     const session = sessionRepository.findById(sessionId);
     if (!session) throw new Error('Session not found');

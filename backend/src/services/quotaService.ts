@@ -21,12 +21,10 @@ export function computeQuota(
   policy: AttendancePolicy = new StandardAttendancePolicy()
 ): Quota {
   const held = attended + missed;
-  const percentage = held === 0 ? 100 : Math.round((attended / held) * 1000) / 10; // FR13, 1 dp
-  // Allowance uses the planned term length so it's meaningful from day one;
-  // falls back to sessions held when no plan is given (keeps older behaviour/tests).
+  const percentage = held === 0 ? 100 : Math.round((attended / held) * 1000) / 10;
   const basis = plannedTotal && plannedTotal > 0 ? plannedTotal : held;
-  const maxAbsencesAllowed = Math.floor(basis * 0.1);                                // FR14
-  const remainingAbsences = Math.max(0, maxAbsencesAllowed - missed);
+  const maxAbsencesAllowed = Math.max(0, Math.floor(attended / 0.9) - held);
+  const remainingAbsences = maxAbsencesAllowed;
   return { held, attended, missed, percentage, maxAbsencesAllowed, remainingAbsences, ...policy.evaluate(percentage) };
 }
 

@@ -1,14 +1,10 @@
 // src/config/db.ts
-// Data layer: opens the SQLite connection, enforces foreign keys, and ensures the schema exists.
 import Database from 'better-sqlite3';
 import path from 'path';
 
-// One shared database connection for the whole app (file lives at backend/quota.db).
 const dbPath = path.join(__dirname, '..', '..', 'quota.db');
 const db = new Database(dbPath);
 
-// Foreign keys are OFF by default in SQLite. Enabling them enforces referential
-// integrity — this is the Reliability quality attribute (NFR04) in practice.
 db.pragma('foreign_keys = ON');
 
 db.exec(`
@@ -50,6 +46,7 @@ db.exec(`
     id         INTEGER PRIMARY KEY,
     module_id  INTEGER NOT NULL,
     date       TEXT NOT NULL,
+    classes    INTEGER NOT NULL DEFAULT 1,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
   );
@@ -79,5 +76,6 @@ db.exec(`
 
 try { db.exec(`ALTER TABLE notifications ADD COLUMN is_read INTEGER NOT NULL DEFAULT 0`); } catch { /* already added */ }
 try { db.exec(`ALTER TABLE modules ADD COLUMN total_classes INTEGER NOT NULL DEFAULT 30`); } catch { /* already added */ }
+try { db.exec(`ALTER TABLE sessions ADD COLUMN classes INTEGER NOT NULL DEFAULT 1`); } catch { /* already added */ }
 
 export default db;
