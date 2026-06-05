@@ -9,11 +9,11 @@ export const attendanceController = {
   },
 
   submit(req: Request, res: Response): void {
-    const { date, absentStudentIds } = req.body ?? {};
+    const { date, absentStudentIds, classes } = req.body ?? {};
     if (!date) { res.status(400).json({ error: 'date is required (YYYY-MM-DD)' }); return; }
     try {
       res.status(201).json(attendanceService.submitSession(
-        req.user!.userId, Number(req.params.id), date, absentStudentIds ?? []
+        req.user!.userId, Number(req.params.id), date, absentStudentIds ?? [], Number(classes) > 0 ? Math.floor(Number(classes)) : 1
       ));
     } catch (err) { res.status(404).json({ error: (err as Error).message }); }
   },

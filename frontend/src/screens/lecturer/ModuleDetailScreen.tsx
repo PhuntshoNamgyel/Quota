@@ -11,14 +11,17 @@ import { RootStackParams } from '../../navigation/types';
 type Props = NativeStackScreenProps<RootStackParams, 'ModuleDetail'>;
 interface Student { id: number; name: string; email: string; }
 interface SessionRow { id: number; date: string; }
+interface ScheduleRow { day_of_week: string; start_time: string; end_time: string; }
 
 const studentNo = (email: string) => email.split('.')[0];
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function ModuleDetailScreen({ route, navigation }: Props) {
   const { moduleId, moduleName } = route.params;
   const [enrolled, setEnrolled] = useState<Student[]>([]);
   const [all, setAll] = useState<Student[]>([]);
   const [sessions, setSessions] = useState<SessionRow[]>([]);
+  const [schedule, setSchedule] = useState<ScheduleRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [studentsOpen, setStudentsOpen] = useState(false);
   const [sessionsOpen, setSessionsOpen] = useState(false);
@@ -26,12 +29,16 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
   useLayoutEffect(() => { navigation.setOptions({ title: moduleName }); }, [navigation, moduleName]);
 
   const load = useCallback(async () => {
-    const [e, a, s] = await Promise.all([
+    const [e, a, s, modules] = await Promise.all([
       api.get(`/api/modules/${moduleId}/students`),
       api.get('/api/modules/students/all'),
       api.get(`/api/modules/${moduleId}/sessions`),
+      api.get('/api/modules'),
     ]);
-    setEnrolled(e); setAll(a); setSessions(s); setLoading(false);
+    setEnrolled(e); setAll(a); setSessions(s);
+    const mod = (modules as { id: number; schedule: ScheduleRow[] }[]).find((m) => m.id === moduleId);
+    setSchedule(mod?.schedule ?? []);
+    setLoading(false);
   }, [moduleId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -66,6 +73,49 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
     ]);
   }
 
+  function handleTakeAttendance() {
+    const todayName = DAYS[new Date().getDay()];
+    const todaySlots = schedule.filter((s) => s.day_of_week === todayName);
+
+    if (todaySlots.length === 0) {
+      Alert.alert(
+        'Not a scheduled day',
+        `${moduleName} is not scheduled for today (${todayName}). Proceed anyway?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Proceed', onPress: () => navigation.navigate('MarkAttendance', { moduleId, moduleName }) },
+        ]
+      );
+      return;
+    }
+
+    if (todaySlots.length === 1) {
+      navigation.navigate('MarkAttendance', {
+        moduleId, moduleName,
+        slotStart: todaySlots[0].start_time,
+        slotEnd: todaySlots[0].end_time,
+      });
+      return;
+    }
+
+    // Multiple slots on the same day — show a picker
+    Alert.alert(
+      'Select slot',
+      'This module has multiple slots today. Which one are you marking?',
+      [
+        ...todaySlots.map((slot) => ({
+          text: `${slot.start_time} – ${slot.end_time}`,
+          onPress: () => navigation.navigate('MarkAttendance', {
+            moduleId, moduleName,
+            slotStart: slot.start_time,
+            slotEnd: slot.end_time,
+          }),
+        })),
+        { text: 'Cancel', style: 'cancel' as const },
+      ]
+    );
+  }
+
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
   const enrolledIds = new Set(enrolled.map((s) => s.id));
@@ -74,7 +124,7 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <View style={styles.btnRow}>
-        <TouchableOpacity style={styles.takeBtn} onPress={() => navigation.navigate('MarkAttendance', { moduleId, moduleName })}>
+        <TouchableOpacity style={styles.takeBtn} onPress={handleTakeAttendance}>
           <Text style={styles.takeBtnText}>Take attendance</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.reportBtn} onPress={() => navigation.navigate('Reports', { moduleId, moduleName })}>

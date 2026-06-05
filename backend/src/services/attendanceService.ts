@@ -5,6 +5,7 @@ import { sessionRepository } from '../repositories/SessionRepository';
 import { attendanceRepository } from '../repositories/AttendanceRepository';
 import { enrolmentRepository } from '../repositories/EnrolmentRepository';
 import { moduleService } from './moduleService';
+import { slotClasses } from '../utils/slotUtils';
 import { AttendanceStatus, User } from '../models';
 
 function publicStudent(u: User) {
@@ -30,6 +31,10 @@ function buildRecords(sessionId: number, enrolled: User[], absentStudentIds: num
   }));
 }
 
+export function classesPerWeek(schedules: { start_time: string; end_time: string }[]): number {
+  return schedules.reduce((sum, s) => sum + slotClasses(s.start_time, s.end_time), 0);
+}
+
 export const attendanceService = {
   getRoster(lecturerId: number, moduleId: number) {
     moduleService.assertOwned(lecturerId, moduleId);
@@ -39,9 +44,9 @@ export const attendanceService = {
     }));
   },
 
-  submitSession(lecturerId: number, moduleId: number, date: string, absentStudentIds: number[]) {
+  submitSession(lecturerId: number, moduleId: number, date: string, absentStudentIds: number[], classes: number) {
     moduleService.assertOwned(lecturerId, moduleId);
-    const session = sessionRepository.create(moduleId, date);
+    const session = sessionRepository.create(moduleId, date, classes);
     const enrolled = enrolmentRepository.findStudentsByModule(moduleId);
     attendanceRepository.saveMany(buildRecords(session.id, enrolled, absentStudentIds));
     fireQuotaEvents(moduleId, enrolled);

@@ -1,6 +1,8 @@
 // src/screens/lecturer/CreateModuleScreen.tsx
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, Modal } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { api } from '../../api/client';
 import { colors } from '../../theme';
@@ -11,20 +13,41 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 interface Slot { day: string; start: string; end: string; }
 interface ScheduleRow { day_of_week: string; start_time: string; end_time: string; }
-interface ModuleItem { id: number; name: string; total_classes: number; schedule: ScheduleRow[]; }
+interface ModuleItem { id: number; name: string; total_classes: number; semester_weeks: number; schedule: ScheduleRow[]; }
 
 const newSlot = (): Slot => ({ day: 'Monday', start: '09:00', end: '11:00' });
+
+function timeStringToDate(t: string): Date {
+  const [h, m] = t.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d;
+}
+
+function dateToTimeString(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
 
 export default function CreateModuleScreen({ route, navigation }: Props) {
   const moduleId = route.params?.moduleId;
   const isEdit = moduleId != null;
 
   const [name, setName] = useState('');
-  const [total, setTotal] = useState('30');
+  const [weeks, setWeeks] = useState('14');
   const [slots, setSlots] = useState<Slot[]>([newSlot()]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
+
+  // Time picker state
+  const [pickerVisible, setPickerVisible] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<{ index: number; field: 'start' | 'end' } | null>(null);
+  const [pickerDate, setPickerDate] = useState(new Date());
 
   useLayoutEffect(() => {
     navigation.setOptions({ title: isEdit ? 'Edit Module' : 'New Module' });
@@ -38,7 +61,7 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
         const m = modules.find((x) => x.id === moduleId);
         if (m) {
           setName(m.name);
-          setTotal(String(m.total_classes ?? 30));
+          setWeeks(String(m.semester_weeks ?? 14));
           setSlots(m.schedule.length
             ? m.schedule.map((s) => ({ day: s.day_of_week, start: s.start_time, end: s.end_time }))
             : [newSlot()]);
@@ -55,14 +78,41 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
   function addSlot() { setSlots((prev) => [...prev, newSlot()]); }
   function removeSlot(index: number) { setSlots((prev) => prev.filter((_, i) => i !== index)); }
 
+  function openPicker(index: number, field: 'start' | 'end') {
+    setPickerTarget({ index, field });
+    setPickerDate(timeStringToDate(slots[index][field]));
+    setPickerVisible(true);
+  }
+
+  function onPickerChange(_: unknown, selected?: Date) {
+    if (Platform.OS === 'android') setPickerVisible(false);
+    if (selected && pickerTarget) {
+      updateSlot(pickerTarget.index, { [pickerTarget.field]: dateToTimeString(selected) });
+    }
+  }
+
+  function confirmIOSPicker() {
+    setPickerVisible(false);
+  }
+
   async function save() {
     if (!name.trim()) { setError('Module name is required'); return; }
+
+    // Validate each slot's start and end times
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      if (timeToMinutes(slot.end) <= timeToMinutes(slot.start)) {
+        setError(`Slot ${i + 1}: End time must be after start time.`);
+        return;
+      }
+    }
+
     setError(''); setSaving(true);
     const schedule = slots.map((s) => ({ day_of_week: s.day, start_time: s.start, end_time: s.end }));
-    const totalClasses = Number(total) > 0 ? Math.floor(Number(total)) : 30;
+    const semesterWeeks = Number(weeks) > 0 ? Math.floor(Number(weeks)) : 14;
     try {
-      if (isEdit) await api.put(`/api/modules/${moduleId}`, { name: name.trim(), schedule, totalClasses });
-      else await api.post('/api/modules', { name: name.trim(), schedule, totalClasses });
+      if (isEdit) await api.put(`/api/modules/${moduleId}`, { name: name.trim(), schedule, semesterWeeks });
+      else await api.post('/api/modules', { name: name.trim(), schedule, semesterWeeks });
       navigation.goBack();
     } catch (e) {
       setError((e as Error).message);
@@ -74,15 +124,15 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
+    <KeyboardAwareScrollView style={styles.container} contentContainerStyle={{ padding: 20 }} enableOnAndroid extraScrollHeight={20}>
       <Text style={styles.label}>Module name</Text>
       <TextInput style={styles.input} placeholder="e.g. SWE201 Cross Platform Development"
         placeholderTextColor={colors.muted} value={name} onChangeText={setName} />
 
-      <Text style={[styles.label, { marginTop: 22 }]}>Total classes this semester</Text>
-      <TextInput style={styles.input} value={total} onChangeText={setTotal}
-        keyboardType="number-pad" placeholder="30" placeholderTextColor={colors.muted} />
-      <Text style={styles.helpText}>Used to show students their absence allowance from the start of term.</Text>
+      <Text style={[styles.label, { marginTop: 22 }]}>Semester weeks</Text>
+      <TextInput style={styles.input} value={weeks} onChangeText={setWeeks}
+        keyboardType="number-pad" placeholder="14" placeholderTextColor={colors.muted} />
+      <Text style={styles.helpText}>Total classes will be calculated automatically from your schedule and week count.</Text>
 
       <Text style={[styles.label, { marginTop: 22 }]}>Weekly schedule</Text>
       {slots.map((slot, index) => (
@@ -103,11 +153,15 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
           <View style={styles.timeRow}>
             <View style={styles.timeCol}>
               <Text style={styles.smallLabel}>Start</Text>
-              <TextInput style={styles.input} value={slot.start} onChangeText={(t) => updateSlot(index, { start: t })} placeholder="09:00" placeholderTextColor={colors.muted} />
+              <TouchableOpacity style={styles.timePicker} onPress={() => openPicker(index, 'start')}>
+                <Text style={styles.timeText}>{slot.start}</Text>
+              </TouchableOpacity>
             </View>
             <View style={styles.timeCol}>
               <Text style={styles.smallLabel}>End</Text>
-              <TextInput style={styles.input} value={slot.end} onChangeText={(t) => updateSlot(index, { end: t })} placeholder="11:00" placeholderTextColor={colors.muted} />
+              <TouchableOpacity style={styles.timePicker} onPress={() => openPicker(index, 'end')}>
+                <Text style={styles.timeText}>{slot.end}</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -122,7 +176,38 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
       <TouchableOpacity style={styles.button} onPress={save} disabled={saving}>
         {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{isEdit ? 'Save changes' : 'Create module'}</Text>}
       </TouchableOpacity>
-    </ScrollView>
+
+      {/* iOS time picker in modal */}
+      {Platform.OS === 'ios' && (
+        <Modal visible={pickerVisible} transparent animationType="slide">
+          <View style={styles.pickerOverlay}>
+            <View style={styles.pickerCard}>
+              <TouchableOpacity style={styles.pickerDone} onPress={confirmIOSPicker}>
+                <Text style={styles.pickerDoneText}>Done</Text>
+              </TouchableOpacity>
+              <DateTimePicker
+                value={pickerDate}
+                mode="time"
+                display="spinner"
+                onChange={onPickerChange}
+                minuteInterval={15}
+              />
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* Android time picker renders inline */}
+      {Platform.OS === 'android' && pickerVisible && (
+        <DateTimePicker
+          value={pickerDate}
+          mode="time"
+          display="default"
+          onChange={onPickerChange}
+          minuteInterval={15}
+        />
+      )}
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -144,9 +229,15 @@ const styles = StyleSheet.create({
   chipTextActive: { color: '#fff' },
   timeRow: { flexDirection: 'row', gap: 14, marginTop: 12 },
   timeCol: { flex: 1 },
+  timePicker: { backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, alignItems: 'center' },
+  timeText: { fontSize: 16, color: colors.text, fontWeight: '600' },
   addSlot: { borderWidth: 1, borderColor: colors.primary, borderStyle: 'dashed', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 2 },
   addSlotText: { color: colors.primary, fontWeight: '700' },
   error: { color: colors.red, marginTop: 14 },
-  button: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 24 },
+  button: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 24, marginBottom: 40 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  pickerOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' },
+  pickerCard: { backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingBottom: 30 },
+  pickerDone: { alignItems: 'flex-end', padding: 16 },
+  pickerDoneText: { color: colors.primary, fontWeight: '700', fontSize: 16 },
 });

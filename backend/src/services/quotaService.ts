@@ -11,9 +11,9 @@ export interface Quota extends Compliance {
   percentage: number;
   maxAbsencesAllowed: number;
   remainingAbsences: number;
+  totalClasses: number;
 }
 
-// Pure calculation — no database — so it can be unit-tested directly.
 export function computeQuota(
   attended: number,
   missed: number,
@@ -22,16 +22,15 @@ export function computeQuota(
 ): Quota {
   const held = attended + missed;
   const percentage = held === 0 ? 100 : Math.round((attended / held) * 1000) / 10;
-  const basis = plannedTotal && plannedTotal > 0 ? plannedTotal : held;
-  const maxAbsencesAllowed = Math.max(0, Math.floor(attended / 0.9) - held);
-  const remainingAbsences = maxAbsencesAllowed;
-  return { held, attended, missed, percentage, maxAbsencesAllowed, remainingAbsences, ...policy.evaluate(percentage) };
+  const totalClasses = plannedTotal && plannedTotal > 0 ? plannedTotal : held;
+  const maxAbsencesAllowed = Math.floor(totalClasses * 0.1);
+  const remainingAbsences = Math.max(0, maxAbsencesAllowed - missed);
+  return { held, attended, missed, percentage, maxAbsencesAllowed, remainingAbsences, totalClasses, ...policy.evaluate(percentage) };
 }
 
 export class QuotaService {
   constructor(private policy: AttendancePolicy = new StandardAttendancePolicy()) {}
 
-  // FR15: computed live on every read.
   calculate(moduleId: number, studentId: number): Quota {
     const { attended, missed } = attendanceRepository.studentModuleCounts(moduleId, studentId);
     const module = moduleRepository.findById(moduleId);

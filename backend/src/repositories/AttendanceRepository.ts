@@ -1,17 +1,14 @@
 // src/repositories/AttendanceRepository.ts
-// Repository Pattern: all SQL for the `attendance_records` table.
 import db from '../config/db';
 import { AttendanceRecord, AttendanceStatus } from '../models';
 
 export class AttendanceRepository {
-  // Upsert keyed on (session_id, student_id): works for first submission AND edits (FR12).
   private upsert = db.prepare(`
     INSERT INTO attendance_records (session_id, student_id, status)
     VALUES (@sessionId, @studentId, @status)
     ON CONFLICT(session_id, student_id) DO UPDATE SET status = excluded.status
   `);
 
-  // Save many records in a single transaction — all or nothing (NFR04 Reliability).
   saveMany(records: { sessionId: number; studentId: number; status: AttendanceStatus }[]): void {
     const tx = db.transaction((rows: typeof records) => {
       for (const r of rows) this.upsert.run(r);
@@ -26,13 +23,13 @@ export class AttendanceRepository {
   studentModuleCounts(moduleId: number, studentId: number): { attended: number; missed: number } {
     const row = db.prepare(`
       SELECT
-        SUM(CASE WHEN ar.status = 'present' THEN 1 ELSE 0 END) AS attended,
-        SUM(CASE WHEN ar.status = 'absent'  THEN 1 ELSE 0 END) AS missed
+        SUM(CASE WHEN ar.status = 'present' THEN s.classes ELSE 0 END) AS attended,
+        SUM(CASE WHEN ar.status = 'absent'  THEN s.classes ELSE 0 END) AS missed
       FROM attendance_records ar
       JOIN sessions s ON s.id = ar.session_id
       WHERE s.module_id = ? AND ar.student_id = ?
     `).get(moduleId, studentId) as { attended: number | null; missed: number | null };
-    return { attended: row.attended ?? 0, missed: row.missed ?? 0 }; // SUM is null when no rows
+    return { attended: row.attended ?? 0, missed: row.missed ?? 0 };
   }
 
   studentModuleHistory(moduleId: number, studentId: number) {

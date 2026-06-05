@@ -3,8 +3,8 @@ import db from '../config/db';
 import { Session } from '../models';
 
 export class SessionRepository {
-  create(moduleId: number, date: string): Session {
-    const r = db.prepare('INSERT INTO sessions (module_id, date) VALUES (?, ?)').run(moduleId, date);
+  create(moduleId: number, date: string, classes: number): Session {
+    const r = db.prepare('INSERT INTO sessions (module_id, date, classes) VALUES (?, ?, ?)').run(moduleId, date, classes);
     return this.findById(r.lastInsertRowid as number)!;
   }
   findById(id: number): Session | undefined {
@@ -18,7 +18,7 @@ export class SessionRepository {
     return row.n;
   }
   delete(id: number): void {
-    db.prepare('DELETE FROM sessions WHERE id = ?').run(id); // attendance_records cascade via FK
+    db.prepare('DELETE FROM sessions WHERE id = ?').run(id);
   }
 }
 export const sessionRepository = new SessionRepository();

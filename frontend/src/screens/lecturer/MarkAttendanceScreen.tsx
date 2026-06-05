@@ -12,12 +12,27 @@ type Props = NativeStackScreenProps<RootStackParams, 'MarkAttendance'>;
 type Status = 'present' | 'absent';
 interface Row { id: number; name: string; no: string; status: Status; }
 interface ApiStudent { id: number; name: string; email: string; status: Status; }
+interface ScheduleRow { day_of_week: string; start_time: string; end_time: string; }
 
 const today = () => new Date().toISOString().slice(0, 10);
 const studentNo = (email: string) => email.split('.')[0];
 
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function slotClasses(start: string, end: string): number {
+  let minutes = timeToMinutes(end) - timeToMinutes(start);
+  const slotStart = timeToMinutes(start);
+  const slotEnd   = timeToMinutes(end);
+  if (slotStart < timeToMinutes('10:15') && slotEnd > timeToMinutes('10:00')) minutes -= 15;
+  if (slotStart < timeToMinutes('13:15') && slotEnd > timeToMinutes('12:15')) minutes -= 60;
+  return Math.max(1, Math.round(minutes / 60));
+}
+
 export default function MarkAttendanceScreen({ route, navigation }: Props) {
-  const { moduleId, moduleName, sessionId } = route.params;
+  const { moduleId, moduleName, sessionId, slotStart, slotEnd } = route.params;
   const editing = sessionId != null;
 
   const [rows, setRows] = useState<Row[]>([]);
@@ -51,9 +66,10 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
   async function submit() {
     setSaving(true);
     const absentStudentIds = rows.filter((r) => r.status === 'absent').map((r) => r.id);
+    const classes = slotStart && slotEnd ? slotClasses(slotStart, slotEnd) : 1;
     try {
       if (editing) await api.put(`/api/sessions/${sessionId}`, { absentStudentIds });
-      else await api.post(`/api/modules/${moduleId}/sessions`, { date, absentStudentIds });
+      else await api.post(`/api/modules/${moduleId}/sessions`, { date, absentStudentIds, classes });
       navigation.goBack();
     } catch {
       setSaving(false);
@@ -63,7 +79,7 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
   if (loading) return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
   const q = query.toLowerCase();
-  const filtered = rows.filter((r) => r.name.toLowerCase().includes(q) || r.no.includes(q)); // FR08 (name or number)
+  const filtered = rows.filter((r) => r.name.toLowerCase().includes(q) || r.no.includes(q));
   const presentCount = rows.filter((r) => r.status === 'present').length;
   const absentCount = rows.length - presentCount;
 

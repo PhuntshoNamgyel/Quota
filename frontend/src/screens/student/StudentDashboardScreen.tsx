@@ -11,7 +11,7 @@ import { RootStackParams } from '../../navigation/types';
 type Props = NativeStackScreenProps<RootStackParams, 'StudentDashboard'>;
 interface Quota {
   held: number; attended: number; missed: number; percentage: number;
-  remainingAbsences: number; colour: 'green' | 'yellow' | 'red'; label: string;
+  remainingAbsences: number; totalClasses: number; colour: 'green' | 'yellow' | 'red'; label: string;
 }
 interface DashItem { module: { id: number; name: string }; quota: Quota; }
 
@@ -37,7 +37,7 @@ export default function StudentDashboardScreen({ navigation }: Props) {
     try { await fetchAll(); } finally { setLoading(false); }
   }, [fetchAll]);
 
-  useFocusEffect(useCallback(() => { load(); }, [load])); // also refreshes the badge when returning from Alerts
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -88,7 +88,7 @@ export default function StudentDashboardScreen({ navigation }: Props) {
               <Text style={styles.statusText}>{item.quota.label}</Text>
             </View>
             <Text style={styles.meta}>
-              {item.quota.attended}/{item.quota.held} attended  ·  {item.quota.missed} missed  ·  {item.quota.remainingAbsences} absences left
+              {item.quota.attended}/{item.quota.totalClasses} attended  ·  {item.quota.missed} missed  ·  {item.quota.remainingAbsences} absences left
             </Text>
           </TouchableOpacity>
         );

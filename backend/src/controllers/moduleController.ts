@@ -1,17 +1,24 @@
 // src/controllers/moduleController.ts
 import { Request, Response } from 'express';
 import { moduleService } from '../services/moduleService';
+import { slotClasses } from '../utils/slotUtils';
 
-const planned = (v: unknown) => (Number(v) > 0 ? Math.floor(Number(v)) : 30);
+function totalClassesFromWeeks(weeks: number, schedule: { start_time: string; end_time: string }[]): number {
+  const perWeek = schedule.reduce((sum, s) => sum + slotClasses(s.start_time, s.end_time), 0);
+  return weeks * perWeek;
+}
+
+const weeks = (v: unknown) => (Number(v) > 0 ? Math.floor(Number(v)) : 14);
 
 export const moduleController = {
   create(req: Request, res: Response): void {
-    const { name, schedule, totalClasses } = req.body ?? {};
+    const { name, schedule, semesterWeeks } = req.body ?? {};
     if (!name || !Array.isArray(schedule) || schedule.length === 0) {
       res.status(400).json({ error: 'name and a non-empty schedule array are required' });
       return;
     }
-    res.status(201).json(moduleService.createModule(req.user!.userId, name, schedule, planned(totalClasses)));
+    const totalClasses = totalClassesFromWeeks(weeks(semesterWeeks), schedule);
+    res.status(201).json(moduleService.createModule(req.user!.userId, name, schedule, totalClasses));
   },
 
   list(req: Request, res: Response): void {
@@ -49,13 +56,14 @@ export const moduleController = {
   },
 
   update(req: Request, res: Response): void {
-    const { name, schedule, totalClasses } = req.body ?? {};
+    const { name, schedule, semesterWeeks } = req.body ?? {};
     if (!name || !Array.isArray(schedule) || schedule.length === 0) {
       res.status(400).json({ error: 'name and a non-empty schedule array are required' });
       return;
     }
+    const totalClasses = totalClassesFromWeeks(weeks(semesterWeeks), schedule);
     try {
-      res.json(moduleService.updateModule(req.user!.userId, Number(req.params.id), name, schedule, planned(totalClasses)));
+      res.json(moduleService.updateModule(req.user!.userId, Number(req.params.id), name, schedule, totalClasses));
     } catch (err) { res.status(404).json({ error: (err as Error).message }); }
   },
 
