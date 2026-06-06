@@ -17,10 +17,11 @@ db.exec(`
   );
 
   CREATE TABLE IF NOT EXISTS modules (
-    id            INTEGER PRIMARY KEY,
-    name          TEXT NOT NULL,
-    lecturer_id   INTEGER NOT NULL,
-    total_classes INTEGER NOT NULL DEFAULT 30,
+    id              INTEGER PRIMARY KEY,
+    name            TEXT NOT NULL,
+    lecturer_id     INTEGER NOT NULL,
+    total_classes   INTEGER NOT NULL DEFAULT 30,
+    semester_weeks  INTEGER NOT NULL DEFAULT 14,
     FOREIGN KEY (lecturer_id) REFERENCES users(id)
   );
 
@@ -74,8 +75,9 @@ db.exec(`
   );
 `);
 
-try { db.exec(`ALTER TABLE notifications ADD COLUMN is_read INTEGER NOT NULL DEFAULT 0`); } catch { /* already added */ }
-try { db.exec(`ALTER TABLE modules ADD COLUMN total_classes INTEGER NOT NULL DEFAULT 30`); } catch { /* already added */ }
-try { db.exec(`ALTER TABLE sessions ADD COLUMN classes INTEGER NOT NULL DEFAULT 1`); } catch { /* already added */ }
+try { db.exec(`ALTER TABLE notifications ADD COLUMN is_read INTEGER NOT NULL DEFAULT 0`); } catch {}
+try { db.exec(`ALTER TABLE modules ADD COLUMN total_classes INTEGER NOT NULL DEFAULT 30`); } catch {}
+try { db.exec(`ALTER TABLE modules ADD COLUMN semester_weeks INTEGER NOT NULL DEFAULT 14`); } catch {}
+try { db.exec(`ALTER TABLE sessions ADD COLUMN classes INTEGER NOT NULL DEFAULT 1`); } catch {}
 
 export default db;

@@ -9,8 +9,8 @@ interface ScheduleInput { day_of_week: string; start_time: string; end_time: str
 function publicUser(u: User) { return { id: u.id, name: u.name, email: u.email, role: u.role }; }
 
 export const moduleService = {
-  createModule(lecturerId: number, name: string, schedule: ScheduleInput[], totalClasses: number) {
-    const module = moduleRepository.create(name, lecturerId, totalClasses);
+  createModule(lecturerId: number, name: string, schedule: ScheduleInput[], totalClasses: number, semesterWeeks: number) {
+    const module = moduleRepository.create(name, lecturerId, totalClasses, semesterWeeks);
     schedule.forEach((s) => scheduleRepository.create(module.id, s.day_of_week, s.start_time, s.end_time));
     return { ...module, schedule: scheduleRepository.findByModule(module.id) };
   },
@@ -58,12 +58,12 @@ export const moduleService = {
     return userRepository.findAllStudents().map(publicUser);
   },
 
-  updateModule(lecturerId: number, moduleId: number, name: string, schedule: ScheduleInput[], totalClasses: number) {
+  updateModule(lecturerId: number, moduleId: number, name: string, schedule: ScheduleInput[], totalClasses: number, semesterWeeks: number) {
     this.assertOwned(lecturerId, moduleId);
-    moduleRepository.update(moduleId, name, totalClasses);
+    moduleRepository.update(moduleId, name, totalClasses, semesterWeeks);
     scheduleRepository.deleteByModule(moduleId);
     schedule.forEach((s) => scheduleRepository.create(moduleId, s.day_of_week, s.start_time, s.end_time));
-    return { id: moduleId, name, total_classes: totalClasses, schedule: scheduleRepository.findByModule(moduleId) };
+    return { id: moduleId, name, total_classes: totalClasses, semester_weeks: semesterWeeks, schedule: scheduleRepository.findByModule(moduleId) };
   },
 
   deleteModule(lecturerId: number, moduleId: number) {

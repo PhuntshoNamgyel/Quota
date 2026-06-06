@@ -7,6 +7,7 @@ export interface QuotaEvent {
   missed: number;
   maxAbsencesAllowed: number;
   held: number;
+  totalClasses: number;
 }
 
 export interface AttendanceObserver {

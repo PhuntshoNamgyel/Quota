@@ -7,7 +7,7 @@ import { notificationRepository } from '../repositories/NotificationRepository';
 
 const LECTURER_PASSWORD = 'Lecturer123';
 const YEAR = 2026;
-const TOTAL_CLASSES = 30;
+const SEMESTER_WEEKS = 10;
 
 const LECTURER = { name: 'Module Lecturer', email: 'lecturer.cst@rub.edu.bt' };
 
@@ -44,10 +44,10 @@ const STUDENTS: [string, string][] = [
 const MODULES = [
   { name: 'SWE201 Cross Platform Development', slots: [
     { day: 'Tuesday', start: '10:15', end: '12:15' },
-    { day: 'Wednesday', start: '11:15', end: '1:15' },
+    { day: 'Wednesday', start: '11:15', end: '13:15' },
   ]},
   { name: 'SDA202 System Design & Solution Architecture', slots: [
-    { day: 'Tuesday', start: '1:15', end: '3:15' },
+    { day: 'Tuesday', start: '13:15', end: '15:15' },
     { day: 'Wednesday', start: '09:00', end: '11:00' },
   ]},
   { name: 'CTE205 Operating Systems', slots: [
@@ -62,11 +62,31 @@ const MODULES = [
   ]},
   { name: 'DSO101 Continuous Integration & Continuous Deployment', slots: [
     { day: 'Monday', start: '09:00', end: '11:15' },
-    { day: 'Thursday', start: '1:15', end: '3:15' },
+    { day: 'Thursday', start: '13:15', end: '15:15' },
   ]},
 ];
 
-const MONTHS: [number, number][] = [[3, 9], [4, 9], [5, 8]];
+const MONTHS: [number, number][] = [[3, 8], [4, 8], [5, 8]];
+
+// Break-aware class counter — mirrors slotUtils.ts logic
+function timeToMinutes(t: string): number {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function slotClasses(start: string, end: string): number {
+  let minutes = timeToMinutes(end) - timeToMinutes(start);
+  const slotStart = timeToMinutes(start);
+  const slotEnd = timeToMinutes(end);
+  if (slotStart < timeToMinutes('10:00') && slotEnd > timeToMinutes('10:15')) minutes -= 15;
+  if (slotStart < timeToMinutes('12:15') && slotEnd > timeToMinutes('13:15')) minutes -= 60;
+  return Math.max(1, Math.round(minutes / 60));
+}
+
+function totalClassesForModule(slots: { start: string; end: string }[]): number {
+  const perWeek = slots.reduce((sum, s) => sum + slotClasses(s.start, s.end), 0);
+  return perWeek * SEMESTER_WEEKS;
+}
 
 function monthDates(month: number, count: number): string[] {
   const daysInMonth = new Date(YEAR, month, 0).getDate();
@@ -94,7 +114,7 @@ function seed() {
 
   const lecturerHash = bcrypt.hashSync(LECTURER_PASSWORD, 10);
   const insertUser     = db.prepare('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)');
-  const insertModule   = db.prepare('INSERT INTO modules (name, lecturer_id, total_classes) VALUES (?, ?, ?)');
+  const insertModule   = db.prepare('INSERT INTO modules (name, lecturer_id, total_classes, semester_weeks) VALUES (?, ?, ?, ?)');
   const insertSchedule = db.prepare('INSERT INTO schedules (module_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)');
   const insertEnrol    = db.prepare('INSERT INTO enrolments (module_id, student_id) VALUES (?, ?)');
   const insertSession  = db.prepare('INSERT INTO sessions (module_id, date) VALUES (?, ?)');
@@ -114,7 +134,8 @@ function seed() {
 
   db.transaction(() => {
     MODULES.forEach((mod, moduleIndex) => {
-      const moduleId = insertModule.run(mod.name, lecturerId, TOTAL_CLASSES).lastInsertRowid as number;
+      const totalClasses = totalClassesForModule(mod.slots);
+      const moduleId = insertModule.run(mod.name, lecturerId, totalClasses, SEMESTER_WEEKS).lastInsertRowid as number;
       mod.slots.forEach((s) => insertSchedule.run(moduleId, s.day, s.start, s.end));
       studentIds.forEach((sid) => insertEnrol.run(moduleId, sid));
 
@@ -126,8 +147,8 @@ function seed() {
           insertRecord.run(sessionId, sid, i < absences ? 'absent' : 'present');
         });
 
-        const q = computeQuota(held - absences, absences, TOTAL_CLASSES);
-        const alert = levelFor(absences, q.maxAbsencesAllowed, held, q.percentage);
+        const q = computeQuota(held - absences, absences, totalClasses);
+        const alert = levelFor(absences, q.maxAbsencesAllowed, held, q.percentage, totalClasses);
         if (alert) { notificationRepository.create(sid, moduleId, alert.level, alert.message); alertsCreated++; }
       });
     });

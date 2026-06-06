@@ -18,6 +18,7 @@ function fireQuotaEvents(moduleId: number, enrolled: User[]) {
     attendanceSubject.notify({
       studentId: s.id, moduleId, percentage: q.percentage, status: q.status,
       missed: q.missed, maxAbsencesAllowed: q.maxAbsencesAllowed, held: q.held,
+      totalClasses: q.totalClasses,
     });
   }
 }

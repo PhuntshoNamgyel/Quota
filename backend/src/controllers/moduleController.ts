@@ -8,7 +8,7 @@ function totalClassesFromWeeks(weeks: number, schedule: { start_time: string; en
   return weeks * perWeek;
 }
 
-const weeks = (v: unknown) => (Number(v) > 0 ? Math.floor(Number(v)) : 14);
+const parseWeeks = (v: unknown) => (Number(v) > 0 ? Math.floor(Number(v)) : 14);
 
 export const moduleController = {
   create(req: Request, res: Response): void {
@@ -17,8 +17,9 @@ export const moduleController = {
       res.status(400).json({ error: 'name and a non-empty schedule array are required' });
       return;
     }
-    const totalClasses = totalClassesFromWeeks(weeks(semesterWeeks), schedule);
-    res.status(201).json(moduleService.createModule(req.user!.userId, name, schedule, totalClasses));
+    const w = parseWeeks(semesterWeeks);
+    const totalClasses = totalClassesFromWeeks(w, schedule);
+    res.status(201).json(moduleService.createModule(req.user!.userId, name, schedule, totalClasses, w));
   },
 
   list(req: Request, res: Response): void {
@@ -61,9 +62,10 @@ export const moduleController = {
       res.status(400).json({ error: 'name and a non-empty schedule array are required' });
       return;
     }
-    const totalClasses = totalClassesFromWeeks(weeks(semesterWeeks), schedule);
+    const w = parseWeeks(semesterWeeks);
+    const totalClasses = totalClassesFromWeeks(w, schedule);
     try {
-      res.json(moduleService.updateModule(req.user!.userId, Number(req.params.id), name, schedule, totalClasses));
+      res.json(moduleService.updateModule(req.user!.userId, Number(req.params.id), name, schedule, totalClasses, w));
     } catch (err) { res.status(404).json({ error: (err as Error).message }); }
   },
 
