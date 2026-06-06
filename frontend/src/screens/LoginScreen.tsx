@@ -1,8 +1,14 @@
 // src/screens/LoginScreen.tsx
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, KeyboardAvoidingView, Platform,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme';
@@ -22,49 +28,75 @@ export default function LoginScreen() {
     }
   }
 
-  // Prefills a seeded demo account for quick presentation access
   function quickFill(role: 'lecturer' | 'student') {
     setEmail(role === 'lecturer' ? 'lecturer.cst@rub.edu.bt' : '02240354.cst@rub.edu.bt');
     setPassword(role === 'lecturer' ? 'Lecturer123' : '02240354');
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <View style={styles.inner}>
-        <Text style={styles.brand}>Quota</Text>
-        <Text style={styles.tagline}>Attendance, sorted.</Text>
+        <View style={styles.header}>
+          <Text style={styles.brand}>Quota</Text>
+          <Text style={styles.tagline}>Attendance, sorted.</Text>
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={colors.muted}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={colors.muted}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={styles.card}>
+          <Text style={styles.title}>Sign In</Text>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email"
+            placeholderTextColor={colors.muted}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Log in</Text>}
-        </TouchableOpacity>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your password"
+            placeholderTextColor={colors.muted}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
 
-        <View style={styles.quickRow}>
-          <TouchableOpacity onPress={() => quickFill('lecturer')}>
-            <Text style={styles.quickText}>Use lecturer demo</Text>
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Log In</Text>
+            )}
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => quickFill('student')}>
-            <Text style={styles.quickText}>Use student demo</Text>
-          </TouchableOpacity>
+
+          <View style={styles.demoContainer}>
+            <TouchableOpacity
+              style={styles.demoButton}
+              onPress={() => quickFill('lecturer')}
+            >
+              <Text style={styles.demoText}>Lecturer Demo</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.demoButton}
+              onPress={() => quickFill('student')}
+            >
+              <Text style={styles.demoText}>Student Demo</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -72,17 +104,120 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 28 },
-  brand: { fontSize: 44, fontWeight: '800', color: colors.primary, textAlign: 'center' },
-  tagline: { fontSize: 15, color: colors.muted, textAlign: 'center', marginBottom: 36 },
-  input: {
-    backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12,
-    paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: colors.text, marginBottom: 14,
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
   },
-  button: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 6 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  error: { color: colors.red, marginBottom: 12, textAlign: 'center' },
-  quickRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 },
-  quickText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
+
+  inner: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+
+  header: {
+    alignItems: 'center',
+    marginBottom: 28,
+  },
+
+  brand: {
+    fontSize: 44,
+    fontWeight: '800',
+    color: colors.primary,
+    letterSpacing: -1,
+  },
+
+  tagline: {
+    marginTop: 4,
+    fontSize: 15,
+    color: colors.muted,
+  },
+
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 20,
+  },
+
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 8,
+  },
+
+  input: {
+    height: 54,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 16,
+  },
+
+  error: {
+    color: colors.red,
+    marginBottom: 12,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+
+  button: {
+    height: 54,
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  demoContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+
+  demoButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  demoText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });

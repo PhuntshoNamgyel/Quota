@@ -39,7 +39,7 @@ export default function ReportsScreen({ route, navigation }: Props) {
 
   const StudentLine = ({ row }: { row: StudentRow }) => (
     <View style={styles.row}>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, paddingRight: 12 }}>
         <Text style={styles.name}>{row.student.name}</Text>
         <Text style={styles.sub}>{row.student.no}  ·  {row.quota.attended}/{row.quota.held} attended</Text>
       </View>
@@ -53,8 +53,21 @@ export default function ReportsScreen({ route, navigation }: Props) {
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
       <View style={styles.summary}>
         <Text style={styles.bigPct}>{report.classAverage}%</Text>
-        <Text style={styles.summaryLabel}>Class average attendance</Text>
-        <Text style={styles.summaryMeta}>{report.totalSessions} sessions  ·  {report.students.length} students</Text>
+
+        <Text style={styles.summaryLabel}>Class Average Attendance</Text>
+
+        <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+          <View style={{ backgroundColor: '#EEF4FF', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 }}>
+            <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 12 }}>
+              {report.totalSessions} Sessions
+            </Text>
+          </View>
+          <View style={{ backgroundColor: '#F8FAFC', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 }}>
+            <Text style={{ color: colors.text, fontWeight: '700', fontSize: 12 }}>
+              {report.students.length} Students
+            </Text>
+          </View>
+        </View>
       </View>
 
       <Text style={styles.section}>At risk — below 90% ({report.atRisk.length})</Text>
@@ -71,15 +84,18 @@ export default function ReportsScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  summary: { backgroundColor: colors.card, borderRadius: 16, padding: 24, alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-  bigPct: { fontSize: 48, fontWeight: '800', color: colors.primary },
-  summaryLabel: { fontSize: 15, color: colors.text, fontWeight: '600', marginTop: 4 },
-  summaryMeta: { fontSize: 13, color: colors.muted, marginTop: 6 },
-  section: { fontSize: 13, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 22, marginBottom: 10 },
-  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, padding: 16, marginBottom: 8, borderWidth: 1, borderColor: colors.border },
-  name: { fontSize: 16, color: colors.text, fontWeight: '500' },
-  sub: { fontSize: 12, color: colors.muted, marginTop: 2 },
-  pill: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 },
-  pillText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  muted: { color: colors.muted },
+
+  summary: { backgroundColor: '#FFFFFF', borderRadius: 24, paddingVertical: 28, paddingHorizontal: 24, alignItems: 'center', marginBottom: 8 },
+  bigPct: { fontSize: 56, fontWeight: '900', color: colors.primary, letterSpacing: -2 },
+  summaryLabel: { fontSize: 16, fontWeight: '700', color: colors.text, marginTop: 4 },
+
+  section: { fontSize: 12, fontWeight: '800', color: colors.muted, textTransform: 'uppercase', letterSpacing: 1, marginTop: 24, marginBottom: 12, paddingHorizontal: 4 },
+
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 18, paddingHorizontal: 18, paddingVertical: 16, marginBottom: 10 },
+  name: { fontSize: 15, color: colors.text, fontWeight: '700' },
+  sub: { fontSize: 13, color: colors.muted, marginTop: 4 },
+  pill: { minWidth: 72, borderRadius: 999, paddingVertical: 8, alignItems: 'center', justifyContent: 'center' },
+  pillText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
+
+  muted: { color: colors.muted, textAlign: 'center', paddingVertical: 12 },
 });

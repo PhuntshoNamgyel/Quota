@@ -123,6 +123,14 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+
+      {/* Module summary card */}
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>{moduleName}</Text>
+        <Text style={styles.summaryMeta}>{enrolled.length} students • {sessions.length} sessions</Text>
+      </View>
+
+      {/* Primary actions */}
       <View style={styles.btnRow}>
         <TouchableOpacity style={styles.takeBtn} onPress={handleTakeAttendance}>
           <Text style={styles.takeBtnText}>Take attendance</Text>
@@ -132,6 +140,7 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
         </TouchableOpacity>
       </View>
 
+      {/* Sessions section */}
       <TouchableOpacity style={styles.sectionHeader} onPress={() => setSessionsOpen((v) => !v)}>
         <Text style={styles.sectionTitle}>Sessions ({sessions.length})</Text>
         <Text style={styles.toggle}>{sessionsOpen ? 'Hide' : 'Show'}</Text>
@@ -151,6 +160,7 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
             </View>
           )))}
 
+      {/* Students section */}
       <TouchableOpacity style={styles.sectionHeader} onPress={() => setStudentsOpen((v) => !v)}>
         <Text style={styles.sectionTitle}>Students ({enrolled.length})</Text>
         <Text style={styles.toggle}>{studentsOpen ? 'Hide' : 'Show'}</Text>
@@ -189,12 +199,14 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
         </>
       )}
 
+      {/* Module management */}
       <TouchableOpacity style={styles.editBtn} onPress={() => navigation.navigate('CreateModule', { moduleId })}>
         <Text style={styles.editBtnText}>Edit module</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.deleteBtn} onPress={confirmDeleteModule}>
         <Text style={styles.deleteText}>Delete module</Text>
       </TouchableOpacity>
+
     </ScrollView>
   );
 }
@@ -202,28 +214,37 @@ export default function ModuleDetailScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  btnRow: { flexDirection: 'row', gap: 12, marginBottom: 8 },
-  takeBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center' },
-  takeBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  reportBtn: { flex: 1, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', backgroundColor: colors.card },
+
+  summaryCard: { backgroundColor: '#FFFFFF', borderRadius: 22, padding: 20, marginBottom: 18 },
+  summaryTitle: { fontSize: 22, fontWeight: '800', color: colors.text },
+  summaryMeta: { marginTop: 8, color: colors.muted, fontSize: 14 },
+
+  btnRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
+  takeBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  takeBtnText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  reportBtn: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: '#DCE4F2' },
   reportBtnText: { color: colors.primary, fontWeight: '700', fontSize: 15 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, marginTop: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
-  toggle: { fontSize: 14, fontWeight: '600', color: colors.primary },
-  subSection: { fontSize: 12, fontWeight: '700', color: colors.muted, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 14, marginBottom: 6 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.card, borderRadius: 10, padding: 14, marginTop: 8, borderWidth: 1, borderColor: colors.border },
-  rowMain: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 12 },
-  rowName: { fontSize: 15, color: colors.text, fontWeight: '500' },
-  rowNoSmall: { fontSize: 12, color: colors.muted, marginTop: 2, fontVariant: ['tabular-nums'] },
-  trailingBtn: { paddingLeft: 12, borderLeftWidth: 1, borderLeftColor: colors.border },
+
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 18, paddingHorizontal: 18, paddingVertical: 16, marginTop: 16, marginBottom: 6 },
+  sectionTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
+  toggle: { fontSize: 14, fontWeight: '700', color: colors.primary },
+  subSection: { fontSize: 12, fontWeight: '700', color: colors.muted, letterSpacing: 1, marginTop: 18, marginBottom: 6 },
+
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginTop: 10 },
+  rowMain: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 14 },
+  rowName: { fontSize: 15, color: colors.text, fontWeight: '700' },
+  rowNoSmall: { fontSize: 12, color: colors.muted, marginTop: 4 },
+  trailingBtn: { paddingLeft: 14 },
   removeLabel: { color: colors.red, fontWeight: '700', fontSize: 13 },
-  editLabel: { color: colors.muted, fontWeight: '600' },
+  editLabel: { color: colors.primary, fontWeight: '700' },
   addLabel: { color: colors.primary, fontWeight: '700' },
-  addAllBtn: { borderWidth: 1, borderColor: colors.primary, borderStyle: 'dashed', borderRadius: 10, paddingVertical: 12, alignItems: 'center', marginTop: 12 },
-  addAllText: { color: colors.primary, fontWeight: '700' },
-  muted: { color: colors.muted, marginTop: 8 },
-  editBtn: { marginTop: 28, borderWidth: 1, borderColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.card },
-  editBtnText: { color: colors.primary, fontWeight: '700' },
-  deleteBtn: { marginTop: 12, borderWidth: 1, borderColor: colors.red, borderRadius: 12, paddingVertical: 14, alignItems: 'center', backgroundColor: colors.card },
-  deleteText: { color: colors.red, fontWeight: '700' },
+
+  addAllBtn: { backgroundColor: '#EEF4FF', borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 14 },
+  addAllText: { color: colors.primary, fontWeight: '700', fontSize: 14 },
+  muted: { color: colors.muted, marginTop: 12, textAlign: 'center' },
+
+  editBtn: { marginTop: 30, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 16, alignItems: 'center', borderWidth: 1, borderColor: '#DCE4F2' },
+  editBtnText: { color: colors.primary, fontWeight: '700', fontSize: 15 },
+  deleteBtn: { marginTop: 12, backgroundColor: '#FFF1F2', borderRadius: 16, paddingVertical: 16, alignItems: 'center' },
+  deleteText: { color: colors.red, fontWeight: '700', fontSize: 15 },
 });

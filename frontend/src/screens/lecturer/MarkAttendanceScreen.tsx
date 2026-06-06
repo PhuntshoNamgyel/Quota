@@ -87,18 +87,33 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
     <View style={styles.container}>
       <View style={styles.top}>
         <Text style={styles.module}>{moduleName}</Text>
-        <Text style={styles.summary}>
-          {formatDate(date)}   ·   <Text style={{ color: colors.green }}>{presentCount} present</Text>   ·   <Text style={{ color: colors.red }}>{absentCount} absent</Text>
-        </Text>
-        <TextInput style={styles.search} placeholder="Search by name or number" placeholderTextColor={colors.muted}
-          value={query} onChangeText={setQuery} autoCapitalize="none" />
+
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16, marginTop: 10 }}>
+          <View style={{ backgroundColor: '#ECFDF5', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 }}>
+            <Text style={{ color: colors.green, fontWeight: '700', fontSize: 12 }}>{presentCount} Present</Text>
+          </View>
+          <View style={{ backgroundColor: '#FEF2F2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999 }}>
+            <Text style={{ color: colors.red, fontWeight: '700', fontSize: 12 }}>{absentCount} Absent</Text>
+          </View>
+        </View>
+
+        <Text style={styles.summary}>{formatDate(date)}</Text>
+
+        <TextInput
+          style={styles.search}
+          placeholder="Search by name or number"
+          placeholderTextColor={colors.muted}
+          value={query}
+          onChangeText={setQuery}
+          autoCapitalize="none"
+        />
         <Text style={styles.hint}>Everyone is Present by default — tap a student to mark Absent.</Text>
       </View>
 
       <FlatList
         data={filtered}
         keyExtractor={(r) => String(r.id)}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
         ListEmptyComponent={<Text style={styles.muted}>No students found.</Text>}
         renderItem={({ item }) => {
           const absent = item.status === 'absent';
@@ -126,18 +141,22 @@ export default function MarkAttendanceScreen({ route, navigation }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  top: { padding: 16, paddingBottom: 4, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border },
-  module: { fontSize: 18, fontWeight: '700', color: colors.text },
-  summary: { fontSize: 13, color: colors.muted, marginTop: 4, marginBottom: 12 },
-  search: { backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15, color: colors.text },
-  hint: { fontSize: 12, color: colors.muted, marginTop: 8, marginBottom: 4 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: colors.card, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 10, borderWidth: 1, borderColor: colors.border },
-  rowAbsent: { borderColor: colors.red, backgroundColor: '#fef2f2' },
-  name: { fontSize: 16, color: colors.text, fontWeight: '500' },
-  no: { fontSize: 12, color: colors.muted, marginTop: 2, fontVariant: ['tabular-nums'] },
-  pill: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 6 },
-  pillText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  submit: { backgroundColor: colors.primary, margin: 16, borderRadius: 12, paddingVertical: 16, alignItems: 'center' },
-  submitText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+
+  top: { margin: 16, marginBottom: 8, backgroundColor: '#FFFFFF', borderRadius: 22, padding: 20 },
+  module: { fontSize: 22, fontWeight: '800', color: colors.text },
+  summary: { fontSize: 14, color: colors.muted, marginTop: 8, marginBottom: 16 },
+  search: { backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: colors.text },
+  hint: { fontSize: 12, color: colors.muted, marginTop: 10, lineHeight: 18 },
+
+  row: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 18, paddingHorizontal: 18, paddingVertical: 16, marginBottom: 12 },
+  rowAbsent: { backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FECACA' },
+  name: { fontSize: 16, fontWeight: '700', color: colors.text },
+  no: { fontSize: 13, color: colors.muted, marginTop: 4 },
+  pill: { minWidth: 96, borderRadius: 999, paddingVertical: 9, alignItems: 'center' },
+  pillText: { color: '#FFFFFF', fontWeight: '800', fontSize: 13 },
+
+  submit: { backgroundColor: colors.primary, marginHorizontal: 16, marginBottom: 20, marginTop: 8, borderRadius: 18, paddingVertical: 18, alignItems: 'center' },
+  submitText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
+
   muted: { color: colors.muted, textAlign: 'center', marginTop: 20 },
 });

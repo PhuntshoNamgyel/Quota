@@ -212,32 +212,204 @@ export default function CreateModuleScreen({ route, navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg },
-  label: { fontSize: 14, fontWeight: '600', color: colors.text, marginBottom: 8 },
-  smallLabel: { fontSize: 13, fontWeight: '600', color: colors.muted, marginBottom: 6 },
-  helpText: { fontSize: 12, color: colors.muted, marginTop: 6 },
-  input: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 16, color: colors.text },
-  slotCard: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, borderRadius: 14, padding: 14, marginBottom: 12 },
-  slotHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  slotTitle: { fontSize: 14, fontWeight: '700', color: colors.text },
-  remove: { color: colors.red, fontWeight: '700', fontSize: 13 },
-  dayRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderWidth: 1, borderColor: colors.border, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.bg },
-  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { color: colors.text, fontWeight: '600' },
-  chipTextActive: { color: '#fff' },
-  timeRow: { flexDirection: 'row', gap: 14, marginTop: 12 },
-  timeCol: { flex: 1 },
-  timePicker: { backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, alignItems: 'center' },
-  timeText: { fontSize: 16, color: colors.text, fontWeight: '600' },
-  addSlot: { borderWidth: 1, borderColor: colors.primary, borderStyle: 'dashed', borderRadius: 12, paddingVertical: 12, alignItems: 'center', marginTop: 2 },
-  addSlotText: { color: colors.primary, fontWeight: '700' },
-  error: { color: colors.red, marginTop: 14 },
-  button: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 24, marginBottom: 40 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  pickerOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.3)' },
-  pickerCard: { backgroundColor: colors.card, borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingBottom: 30 },
-  pickerDone: { alignItems: 'flex-end', padding: 16 },
-  pickerDoneText: { color: colors.primary, fontWeight: '700', fontSize: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.bg,
+  },
+
+  label: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+  },
+
+  smallLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.muted,
+    marginBottom: 6,
+  },
+
+  helpText: {
+    fontSize: 12,
+    color: colors.muted,
+    marginTop: 8,
+    lineHeight: 18,
+  },
+
+  input: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: colors.text,
+  },
+
+  slotCard: {
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+
+  slotHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+
+  slotTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+
+  remove: {
+    color: colors.red,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+
+  dayRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+
+  chip: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 54,
+    alignItems: 'center',
+  },
+
+  chipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+
+  chipText: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  chipTextActive: {
+    color: '#fff',
+  },
+
+  timeRow: {
+    flexDirection: 'row',
+    gap: 14,
+    marginTop: 16,
+  },
+
+  timeCol: {
+    flex: 1,
+  },
+
+  timePicker: {
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+
+  timeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+
+  addSlot: {
+    marginTop: 4,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.primary,
+    borderRadius: 16,
+    paddingVertical: 14,
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+  },
+
+  addSlotText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+
+  error: {
+    color: colors.red,
+    marginTop: 14,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+
+  button: {
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 28,
+    marginBottom: 40,
+  },
+
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  pickerOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+  },
+
+  pickerCard: {
+    backgroundColor: colors.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 30,
+  },
+
+  pickerDone: {
+    alignItems: 'flex-end',
+    padding: 18,
+  },
+
+  pickerDoneText: {
+    color: colors.primary,
+    fontWeight: '700',
+    fontSize: 16,
+  },
 });
