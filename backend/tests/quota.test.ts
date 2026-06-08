@@ -23,30 +23,44 @@ describe('StandardAttendancePolicy (Strategy)', () => {
 
 describe('computeQuota (FR13–FR14)', () => {
   it('computes percentage, max absences, and remaining', () => {
-    const q = computeQuota(9, 1); // 9 attended of 10 held
+    // 9 attended, 1 missed, 20 total planned classes
+    const q = computeQuota(9, 1, 20);
     expect(q.held).toBe(10);
     expect(q.percentage).toBe(90);
-    expect(q.maxAbsencesAllowed).toBe(1); // floor(10 * 0.1)
-    expect(q.remainingAbsences).toBe(0);  // 1 - 1
+    expect(q.maxAbsencesAllowed).toBe(2); // floor(20 * 0.1)
+    expect(q.remainingAbsences).toBe(1);  // 2 - 1
     expect(q.colour).toBe('green');
   });
 
   it('lands in the yellow band at exactly 80%', () => {
-    const q = computeQuota(8, 2);
+    const q = computeQuota(8, 2, 20);
     expect(q.percentage).toBe(80);
     expect(q.colour).toBe('yellow');
   });
 
   it('lands in the red band below 80%', () => {
-    const q = computeQuota(7, 3);
+    const q = computeQuota(7, 3, 20);
     expect(q.percentage).toBe(70);
     expect(q.colour).toBe('red');
   });
 
   it('treats zero sessions as 100% (no divide-by-zero)', () => {
-    const q = computeQuota(0, 0);
+    const q = computeQuota(0, 0, 20);
     expect(q.percentage).toBe(100);
     expect(q.held).toBe(0);
     expect(q.colour).toBe('green');
+  });
+
+  it('shows correct remaining absences from planned total', () => {
+    // Fresh module, no classes held yet — student can still see allowance
+    const q = computeQuota(0, 0, 28);
+    expect(q.maxAbsencesAllowed).toBe(2); // floor(28 * 0.1)
+    expect(q.remainingAbsences).toBe(2);
+  });
+
+  it('remaining absences hits zero when allowance is used up', () => {
+    const q = computeQuota(18, 2, 20);
+    expect(q.maxAbsencesAllowed).toBe(2); // floor(20 * 0.1)
+    expect(q.remainingAbsences).toBe(0);  // 2 - 2
   });
 });
