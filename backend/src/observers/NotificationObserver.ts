@@ -11,7 +11,7 @@ export function levelFor(
 ): { level: string; message: string } | null {
   if (missed === 0) return null;
 
-  // Non-compliant — already below 90%
+  // Already below 75% — beyond the exemption zone
   if (percentage < 90) {
     return {
       level: 'critical',
@@ -19,7 +19,7 @@ export function levelFor(
     };
   }
 
-  // Used up entire allowance — one more miss = non-compliant
+  // One more absence will breach the 90% threshold
   if (maxAbsencesAllowed === 0) {
     return {
       level: 'breach',
@@ -27,7 +27,6 @@ export function levelFor(
     };
   }
 
-  // Only 1 absence left in allowance
   if (maxAbsencesAllowed === 1) {
     return {
       level: 'warning',
@@ -35,7 +34,7 @@ export function levelFor(
     };
   }
 
-  // Early warning — student has used half or more of their allowance
+  // Warn once the student has used half or more of their total absence allowance
   if (totalClasses) {
     const totalAllowed = Math.floor(totalClasses * 0.1);
     if (totalAllowed > 0 && missed >= Math.ceil(totalAllowed / 2)) {
@@ -53,6 +52,7 @@ export class NotificationObserver implements AttendanceObserver {
   onQuotaEvaluated(event: QuotaEvent): void {
     const result = levelFor(event.missed, event.maxAbsencesAllowed, event.held, event.percentage, event.totalClasses);
     if (!result) return;
+    // Deduplicate — avoid re-notifying for the same level on the same module
     if (notificationRepository.exists(event.studentId, event.moduleId, result.level)) return;
     notificationRepository.create(event.studentId, event.moduleId, result.level, result.message);
   }
