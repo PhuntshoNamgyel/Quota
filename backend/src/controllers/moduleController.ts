@@ -3,11 +3,13 @@ import { Request, Response } from 'express';
 import { moduleService } from '../services/moduleService';
 import { slotClasses } from '../utils/slotUtils';
 
+// Derives total planned classes from semester length and weekly schedule
 function totalClassesFromWeeks(weeks: number, schedule: { start_time: string; end_time: string }[]): number {
   const perWeek = schedule.reduce((sum, s) => sum + slotClasses(s.start_time, s.end_time), 0);
   return weeks * perWeek;
 }
 
+// Defaults to 14 weeks if not provided or invalid
 const parseWeeks = (v: unknown) => (Number(v) > 0 ? Math.floor(Number(v)) : 14);
 
 export const moduleController = {
