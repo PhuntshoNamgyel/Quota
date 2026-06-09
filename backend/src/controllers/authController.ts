@@ -2,8 +2,8 @@
 import { Request, Response } from 'express';
 import { authService } from '../services/authService';
 
-// At least 8 characters, one uppercase, one lowercase, one digit
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+// Requires at least 8 chars with one uppercase, one lowercase, and one digit
+const PASSWORD_REGEX = /^(?=.[a-z])(?=.[A-Z])(?=.*\d).{8,}$/;
 
 export const authController = {
   login(req: Request, res: Response): void {
@@ -29,6 +29,7 @@ export const authController = {
       res.status(400).json({ error: 'New password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number' });
       return;
     }
+    // Prevent no-op changes before hitting the service layer
     if (currentPassword === newPassword) {
       res.status(400).json({ error: 'New password must be different from current password' });
       return;
