@@ -1,43 +1,47 @@
-// src/controllers/attendanceController.ts
 import { Request, Response } from 'express';
-import { attendanceService } from '../services/attendanceService';
+import { authService } from '../services/authService';
 
-export const attendanceController = {
-  roster(req: Request, res: Response): void {
-    try { res.json(attendanceService.getRoster(req.user!.userId, Number(req.params.id))); }
-    catch (err) { res.status(404).json({ error: (err as Error).message }); }
-  },
+// Requires at least 8 chars with one uppercase, one lowercase, and one digit
+const PASSWORD_REGEX = /^(?=.[a-z])(?=.[A-Z])(?=.*\d).{8,}$/;
 
-  submit(req: Request, res: Response): void {
-    const { date, absentStudentIds, classes } = req.body ?? {};
-    if (!date) { res.status(400).json({ error: 'date is required (YYYY-MM-DD)' }); return; }
+export const authController = {
+  login(req: Request, res: Response): void {
+    const { email, password } = req.body ?? {};
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password are required' });
+      return;
+    }
     try {
-      res.status(201).json(attendanceService.submitSession(
-        req.user!.userId, Number(req.params.id), date, absentStudentIds ?? [], Number(classes) > 0 ? Math.floor(Number(classes)) : 1
-      ));
-    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
+      res.json(authService.login(email, password));
+    } catch (err) {
+      res.status(401).json({ error: (err as Error).message });
+    }
   },
 
-  listSessions(req: Request, res: Response): void {
-    try { res.json(attendanceService.listSessions(req.user!.userId, Number(req.params.id))); }
-    catch (err) { res.status(404).json({ error: (err as Error).message }); }
-  },
-
-  getSession(req: Request, res: Response): void {
-    try { res.json(attendanceService.getSession(req.user!.userId, Number(req.params.sessionId))); }
-    catch (err) { res.status(404).json({ error: (err as Error).message }); }
-  },
-
-  edit(req: Request, res: Response): void {
-    const { absentStudentIds } = req.body ?? {};
+  changePassword(req: Request, res: Response): void {
+    const { currentPassword, newPassword } = req.body ?? {};
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ error: 'currentPassword and newPassword are required' });
+      return;
+    }
+    if (!PASSWORD_REGEX.test(newPassword)) {
+      res.status(400).json({ error: 'New password must be at least 8 characters and include an uppercase letter, a lowercase letter, and a number' });
+      return;
+    }
+    // Prevent no-op changes before hitting the service layer
+    if (currentPassword === newPassword) {
+      res.status(400).json({ error: 'New password must be different from current password' });
+      return;
+    }
     try {
-      res.json(attendanceService.editSession(req.user!.userId, Number(req.params.sessionId), absentStudentIds ?? []));
-    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
+      authService.changePassword(req.user!.userId, currentPassword, newPassword);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(400).json({ error: (err as Error).message });
+    }
   },
 
-  removeSession(req: Request, res: Response): void {
-    try {
-      res.json(attendanceService.deleteSession(req.user!.userId, Number(req.params.sessionId)));
-    } catch (err) { res.status(404).json({ error: (err as Error).message }); }
+  me(req: Request, res: Response): void {
+    res.json({ user: req.user });
   },
 };
